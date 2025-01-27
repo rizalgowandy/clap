@@ -296,7 +296,7 @@ fn external_subcommand_optional() {
 #[test]
 fn enum_in_enum_subsubcommand() {
     #[derive(Parser, Debug, PartialEq, Eq)]
-    pub enum Opt {
+    pub(crate) enum Opt {
         #[command(alias = "l")]
         List,
         #[command(subcommand, alias = "d")]
@@ -304,7 +304,7 @@ fn enum_in_enum_subsubcommand() {
     }
 
     #[derive(Subcommand, Debug, PartialEq, Eq)]
-    pub enum DaemonCommand {
+    pub(crate) enum DaemonCommand {
         Start,
         Stop,
     }
@@ -372,6 +372,33 @@ fn update_subcommands() {
         Opt::try_parse_from(["test", "command2", "43"]).unwrap(),
         opt
     );
+}
+
+#[test]
+fn update_subcommands_explicit_required() {
+    #[derive(Parser, PartialEq, Eq, Debug)]
+    #[command(subcommand_required = true)]
+    enum Opt {
+        Command1(Command1),
+        Command2(Command2),
+    }
+
+    #[derive(Parser, PartialEq, Eq, Debug)]
+    struct Command1 {
+        arg1: i32,
+
+        arg2: i32,
+    }
+
+    #[derive(Parser, PartialEq, Eq, Debug)]
+    struct Command2 {
+        arg2: i32,
+    }
+
+    // Full subcommand update
+    let mut opt = Opt::Command1(Command1 { arg1: 12, arg2: 14 });
+    opt.try_update_from(["test"]).unwrap();
+    assert_eq!(Opt::Command1(Command1 { arg1: 12, arg2: 14 }), opt);
 }
 
 #[test]

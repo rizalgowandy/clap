@@ -1,4 +1,6 @@
 use clap::{ArgAction, Args, CommandFactory, Parser, Subcommand};
+use snapbox::assert_data_eq;
+use snapbox::str;
 
 #[test]
 fn arg_help_heading_applied() {
@@ -223,25 +225,13 @@ fn derive_generated_error_has_full_context() {
 Usage: clap --req-str <REQ_STR>
        clap <COMMAND>
 
-For more information try '--help'
+For more information, try '--help'.
 "#;
     assert_eq!(result.unwrap_err().to_string(), expected);
 }
 
 #[test]
 fn derive_order_next_order() {
-    static HELP: &str = "\
-Usage: test [OPTIONS]
-
-Options:
-      --flag-b               first flag
-      --option-b <OPTION_B>  first option
-  -h, --help                 Print help information
-  -V, --version              Print version information
-      --flag-a               second flag
-      --option-a <OPTION_A>  second option
-";
-
     #[derive(Parser, Debug)]
     #[command(name = "test", version = "1.2")]
     struct Args {
@@ -277,23 +267,25 @@ Options:
     let mut cmd = Args::command();
 
     let help = cmd.render_help().to_string();
-    snapbox::assert_eq(HELP, help);
-}
-
-#[test]
-fn derive_order_next_order_flatten() {
-    static HELP: &str = "\
+    assert_data_eq!(
+        help,
+        snapbox::str![[r#"
 Usage: test [OPTIONS]
 
 Options:
       --flag-b               first flag
       --option-b <OPTION_B>  first option
-  -h, --help                 Print help information
-  -V, --version              Print version information
+  -h, --help                 Print help
+  -V, --version              Print version
       --flag-a               second flag
       --option-a <OPTION_A>  second option
-";
 
+"#]],
+    );
+}
+
+#[test]
+fn derive_order_next_order_flatten() {
     #[derive(Parser, Debug)]
     #[command(name = "test", version = "1.2")]
     struct Args {
@@ -329,7 +321,21 @@ Options:
     let mut cmd = Args::command();
 
     let help = cmd.render_help().to_string();
-    snapbox::assert_eq(HELP, help);
+    assert_data_eq!(
+        help,
+        snapbox::str![[r#"
+Usage: test [OPTIONS]
+
+Options:
+      --flag-b               first flag
+      --option-b <OPTION_B>  first option
+  -h, --help                 Print help
+  -V, --version              Print version
+      --flag-a               second flag
+      --option-a <OPTION_A>  second option
+
+"#]],
+    );
 }
 
 #[test]
@@ -340,10 +346,10 @@ Usage: test [OPTIONS]
 Options:
       --flag-a               first flag
       --flag-b               second flag
-  -h, --help                 Print help information
+  -h, --help                 Print help
       --option-a <OPTION_A>  first option
       --option-b <OPTION_B>  second option
-  -V, --version              Print version information
+  -V, --version              Print version
 ";
 
     #[derive(Parser, Debug)]
@@ -380,29 +386,11 @@ Options:
     let mut cmd = Args::command();
 
     let help = cmd.render_help().to_string();
-    snapbox::assert_eq(HELP, help);
+    assert_data_eq!(HELP, help);
 }
 
 #[test]
 fn derive_possible_value_help() {
-    static HELP: &str = "\
-Application help
-
-Usage: clap <ARG>
-
-Arguments:
-  <ARG>
-          Argument help
-
-          Possible values:
-          - foo: Foo help
-          - bar: Bar help
-
-Options:
-  -h, --help
-          Print help information (use `-h` for a summary)
-";
-
     /// Application help
     #[derive(Parser, PartialEq, Debug)]
     struct Args {
@@ -423,7 +411,27 @@ Options:
     let mut cmd = Args::command();
 
     let help = cmd.render_long_help().to_string();
-    snapbox::assert_eq(HELP, help);
+    assert_data_eq!(
+        help,
+        str![[r#"
+Application help
+
+Usage: clap <ARG>
+
+Arguments:
+  <ARG>
+          Argument help
+
+          Possible values:
+          - foo: Foo help
+          - bar: Bar help
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+"#]]
+    );
 }
 
 #[test]

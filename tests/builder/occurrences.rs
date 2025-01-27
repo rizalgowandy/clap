@@ -1,5 +1,3 @@
-#![cfg(feature = "unstable-grouped")]
-
 use clap::{Arg, ArgAction, ArgMatches, Command};
 
 fn occurrences_as_vec_vec<'a>(m: &'a ArgMatches, name: &str) -> Vec<Vec<&'a String>> {
@@ -183,10 +181,10 @@ fn grouped_value_multiple_positional_arg_last_multiple() {
 
 #[test]
 fn grouped_interleaved_positional_values() {
-    let cmd = clap::Command::new("foo")
-        .arg(clap::Arg::new("pos").num_args(1..))
+    let cmd = Command::new("foo")
+        .arg(Arg::new("pos").num_args(1..))
         .arg(
-            clap::Arg::new("flag")
+            Arg::new("flag")
                 .short('f')
                 .long("flag")
                 .action(ArgAction::Set)
@@ -206,10 +204,10 @@ fn grouped_interleaved_positional_values() {
 
 #[test]
 fn grouped_interleaved_positional_occurrences() {
-    let cmd = clap::Command::new("foo")
-        .arg(clap::Arg::new("pos").num_args(1..))
+    let cmd = Command::new("foo")
+        .arg(Arg::new("pos").num_args(1..))
         .arg(
-            clap::Arg::new("flag")
+            Arg::new("flag")
                 .short('f')
                 .long("flag")
                 .action(ArgAction::Set)

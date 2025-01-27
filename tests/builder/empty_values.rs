@@ -24,7 +24,7 @@ fn empty_values_with_equals() {
         .arg(Arg::new("config").short('c').action(ArgAction::Set))
         .try_get_matches_from(["config", "-c="])
         .unwrap();
-    assert_eq!(m.get_one::<String>("config").map(|v| v.as_str()), Some(""))
+    assert_eq!(m.get_one::<String>("config").map(|v| v.as_str()), Some(""));
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn no_empty_values() {
         )
         .try_get_matches_from(["config", "-c", ""]);
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::InvalidValue)
+    assert_eq!(m.unwrap_err().kind(), ErrorKind::InvalidValue);
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn no_empty_values_without_equals() {
         )
         .try_get_matches_from(["config", "-c"]);
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::InvalidValue)
+    assert_eq!(m.unwrap_err().kind(), ErrorKind::InvalidValue);
 }
 
 #[test]
@@ -118,11 +118,11 @@ fn no_empty_values_without_equals_but_requires_equals() {
     assert_eq!(m.unwrap_err().kind(), ErrorKind::NoEquals);
 
     static NO_EUQALS_ERROR: &str =
-        "error: Equal sign is needed when assigning values to '--config=<config>'
+        "error: equal sign is needed when assigning values to '--config=<config>'
 
 Usage: config [OPTIONS]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     utils::assert_output(cmd, "config --config", NO_EUQALS_ERROR, true);

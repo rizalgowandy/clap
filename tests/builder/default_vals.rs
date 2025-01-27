@@ -5,6 +5,7 @@ use clap::builder::ArgPredicate;
 #[cfg(feature = "error-context")]
 use clap::error::ErrorKind;
 use clap::{arg, value_parser, Arg, ArgAction, Command};
+use snapbox::str;
 
 #[cfg(feature = "error-context")]
 use super::utils;
@@ -49,10 +50,12 @@ fn opt_without_value_fail() {
         .try_get_matches_from(vec!["", "-o"]);
     assert!(r.is_err());
     let err = r.unwrap_err();
-    assert_eq!(err.kind(), ErrorKind::InvalidValue);
-    assert!(err
-        .to_string()
-        .contains("The argument '-o <opt>' requires a value but none was supplied"));
+    utils::assert_error(err, ErrorKind::InvalidValue, str![[r#"
+error: a value is required for '-o <opt>' but none was supplied
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -730,12 +733,12 @@ fn default_vals_donnot_show_in_smart_usage() {
         cmd,
         "bug",
         "\
-error: The following required arguments were not provided:
+error: the following required arguments were not provided:
   <input>
 
 Usage: bug <input>
 
-For more information try '--help'
+For more information, try '--help'.
 ",
         true,
     );
@@ -793,38 +796,6 @@ fn required_args_with_default_values() {
     assert!(m.contains_id("arg"));
 }
 
-#[cfg(debug_assertions)]
-#[test]
-#[cfg(feature = "error-context")]
-#[should_panic = "Argument `arg`'s default_value=\"value\" failed validation: error: 'value' isn't a valid value for '[arg]'"]
-fn default_values_are_possible_values() {
-    use clap::{Arg, Command};
-
-    let _ = Command::new("test")
-        .arg(
-            Arg::new("arg")
-                .value_parser(["one", "two"])
-                .default_value("value"),
-        )
-        .try_get_matches();
-}
-
-#[cfg(debug_assertions)]
-#[test]
-#[cfg(feature = "error-context")]
-#[should_panic = "Argument `arg`'s default_value=\"one\" failed validation: error: Invalid value 'one' for '[arg]"]
-fn invalid_default_values() {
-    use clap::{Arg, Command};
-
-    let _ = Command::new("test")
-        .arg(
-            Arg::new("arg")
-                .value_parser(clap::value_parser!(u32))
-                .default_value("one"),
-        )
-        .try_get_matches();
-}
-
 #[test]
 fn valid_delimited_default_values() {
     use clap::{Arg, Command};
@@ -835,23 +806,6 @@ fn valid_delimited_default_values() {
                 .value_parser(clap::value_parser!(u32))
                 .value_delimiter(',')
                 .default_value("1,2,3"),
-        )
-        .debug_assert();
-}
-
-#[cfg(debug_assertions)]
-#[test]
-#[cfg(feature = "error-context")]
-#[should_panic = "Argument `arg`'s default_value=\"one\" failed validation: error: Invalid value 'one' for '[arg]"]
-fn invalid_delimited_default_values() {
-    use clap::{Arg, Command};
-
-    Command::new("test")
-        .arg(
-            Arg::new("arg")
-                .value_parser(clap::value_parser!(u32))
-                .value_delimiter(',')
-                .default_value("one,two"),
         )
         .debug_assert();
 }

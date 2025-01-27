@@ -45,6 +45,7 @@ fn cli() -> Command {
         .subcommand(
             Command::new("stash")
                 .args_conflicts_with_subcommands(true)
+                .flatten_help(true)
                 .args(push_args())
                 .subcommand(Command::new("push").args(push_args()))
                 .subcommand(Command::new("pop").arg(arg!([STASH])))
@@ -86,7 +87,7 @@ fn main() {
             let base = base.unwrap_or("stage");
             let head = head.unwrap_or("worktree");
             let path = path.unwrap_or("");
-            println!("Diffing {}..{} {} (color={})", base, head, path, color);
+            println!("Diffing {base}..{head} {path} (color={color})");
         }
         Some(("push", sub_matches)) => {
             println!(
@@ -100,25 +101,25 @@ fn main() {
                 .into_iter()
                 .flatten()
                 .collect::<Vec<_>>();
-            println!("Adding {:?}", paths);
+            println!("Adding {paths:?}");
         }
         Some(("stash", sub_matches)) => {
             let stash_command = sub_matches.subcommand().unwrap_or(("push", sub_matches));
             match stash_command {
                 ("apply", sub_matches) => {
                     let stash = sub_matches.get_one::<String>("STASH");
-                    println!("Applying {:?}", stash);
+                    println!("Applying {stash:?}");
                 }
                 ("pop", sub_matches) => {
                     let stash = sub_matches.get_one::<String>("STASH");
-                    println!("Popping {:?}", stash);
+                    println!("Popping {stash:?}");
                 }
                 ("push", sub_matches) => {
                     let message = sub_matches.get_one::<String>("message");
-                    println!("Pushing {:?}", message);
+                    println!("Pushing {message:?}");
                 }
                 (name, _) => {
-                    unreachable!("Unsupported subcommand `{}`", name)
+                    unreachable!("Unsupported subcommand `{name}`")
                 }
             }
         }
@@ -128,9 +129,9 @@ fn main() {
                 .into_iter()
                 .flatten()
                 .collect::<Vec<_>>();
-            println!("Calling out to {:?} with {:?}", ext, args);
+            println!("Calling out to {ext:?} with {args:?}");
         }
-        _ => unreachable!(), // If all subcommands are defined above, anything else is unreachabe!()
+        _ => unreachable!(), // If all subcommands are defined above, anything else is unreachable!()
     }
 
     // Continued program logic goes here...

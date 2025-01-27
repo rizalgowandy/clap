@@ -3,9 +3,10 @@
 use std::io::{BufRead, Cursor, Write};
 use std::str;
 
-use clap::{arg, Arg, ArgAction, ArgGroup, Command};
+use clap::{arg, error::Error, error::ErrorKind, Arg, ArgAction, ArgGroup, Command};
+use snapbox::assert_data_eq;
 
-pub const FULL_TEMPLATE: &str = "\
+pub(crate) const FULL_TEMPLATE: &str = "\
 {before-help}{name} {version}
 {author-with-newline}{about-with-newline}
 {usage-heading} {usage}
@@ -13,22 +14,16 @@ pub const FULL_TEMPLATE: &str = "\
 {all-args}{after-help}";
 
 #[track_caller]
-pub fn assert_eq<S, S2>(expected: S, actual: S2)
-where
-    S: AsRef<str>,
-    S2: AsRef<str>,
-{
-    let expected = expected.as_ref();
-    let actual = actual.as_ref();
-    snapbox::assert_eq(expected, actual);
-}
-
-#[track_caller]
-pub fn assert_output(l: Command, args: &str, expected: &str, stderr: bool) {
+pub(crate) fn assert_output(
+    l: Command,
+    args: &str,
+    expected: impl snapbox::data::IntoData,
+    stderr: bool,
+) {
     let mut buf = Cursor::new(Vec::with_capacity(50));
     let res = l.try_get_matches_from(args.split(' ').collect::<Vec<_>>());
     let err = res.unwrap_err();
-    write!(&mut buf, "{}", err).unwrap();
+    write!(&mut buf, "{err}").unwrap();
     let actual = buf.into_inner();
     let actual = String::from_utf8(actual).unwrap();
     assert_eq!(
@@ -38,12 +33,32 @@ pub fn assert_output(l: Command, args: &str, expected: &str, stderr: bool) {
         stderr,
         err.use_stderr()
     );
-    assert_eq(expected, actual)
+    assert_data_eq!(actual, expected.raw());
+}
+
+#[track_caller]
+pub(crate) fn assert_error<F: clap::error::ErrorFormatter>(
+    err: Error<F>,
+    expected_kind: ErrorKind,
+    expected_output: impl snapbox::data::IntoData,
+    stderr: bool,
+) {
+    let actual_output = err.to_string();
+    assert_eq!(
+        stderr,
+        err.use_stderr(),
+        "Should Use STDERR failed. Should be {} but is {}",
+        stderr,
+        err.use_stderr()
+    );
+    assert_eq!(expected_kind, err.kind());
+    #[cfg(feature = "error-context")]
+    assert_data_eq!(actual_output, expected_output);
 }
 
 // Legacy tests from the python script days
 
-pub fn complex_app() -> Command {
+pub(crate) fn complex_app() -> Command {
     let opt3_vals = ["fast", "slow"];
     let pos3_vals = ["vi", "emacs"];
 

@@ -14,10 +14,10 @@ _my-app() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '--choice=[]: :(bash fish zsh)' \
-'--unknown=[]: : ' \
-'--other=[]: :( )' \
+'--unknown=[]: :_default' \
+'--other=[]: :' \
 '-p+[]: :_files' \
 '--path=[]: :_files' \
 '-f+[]: :_files' \
@@ -35,8 +35,8 @@ _my-app() {
 '--host=[]: :_hosts' \
 '--url=[]: :_urls' \
 '--email=[]: :_email_addresses' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 '*::command_with_args:_cmdambivalent' \
 && ret=0
 }
@@ -47,4 +47,8 @@ _my-app_commands() {
     _describe -t commands 'my-app commands' commands "$@"
 }
 
-_my-app "$@"
+if [ "$funcstack[1]" = "_my-app" ]; then
+    _my-app "$@"
+else
+    compdef _my-app my-app
+fi

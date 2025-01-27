@@ -1,41 +1,25 @@
-use super::utils;
+use clap::{arg, builder::ArgAction, error::ErrorKind, value_parser, Arg, Command};
+use snapbox::str;
 
-use clap::{arg, error::Error, error::ErrorKind, value_parser, Arg, Command};
-
-#[track_caller]
-fn assert_error<F: clap::error::ErrorFormatter>(
-    err: Error<F>,
-    expected_kind: ErrorKind,
-    expected_output: &str,
-    stderr: bool,
-) {
-    let actual_output = err.to_string();
-    assert_eq!(
-        stderr,
-        err.use_stderr(),
-        "Should Use STDERR failed. Should be {} but is {}",
-        stderr,
-        err.use_stderr()
-    );
-    assert_eq!(expected_kind, err.kind());
-    utils::assert_eq(expected_output, actual_output)
-}
+use crate::utils::assert_error;
 
 #[test]
 fn app_error() {
-    static MESSAGE: &str = "error: Failed for mysterious reasons
+    let message = str![[r#"
+error: failed for mysterious reasons
 
 Usage: test [OPTIONS] --all
 
-For more information try '--help'
-";
+For more information, try '--help'.
+
+"#]];
     let cmd = Command::new("test")
         .arg(
             Arg::new("all")
                 .short('a')
                 .long("all")
                 .required(true)
-                .action(clap::ArgAction::SetTrue)
+                .action(ArgAction::SetTrue)
                 .help("Also do versioning for private crates (will not be published)"),
         )
         .arg(
@@ -55,8 +39,8 @@ For more information try '--help'
         );
     let mut cmd = cmd;
     let expected_kind = ErrorKind::InvalidValue;
-    let err = cmd.error(expected_kind, "Failed for mysterious reasons");
-    assert_error(err, expected_kind, MESSAGE, true);
+    let err = cmd.error(expected_kind, "failed for mysterious reasons");
+    assert_error(err, expected_kind, message, true);
 }
 
 #[test]
@@ -87,13 +71,14 @@ fn kind_prints_help() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::DisplayHelp;
-    static MESSAGE: &str = "\
+    let message = str![[r#"
 Usage: test
 
 Options:
-  -h, --help  Print help information
-";
-    assert_error(err, expected_kind, MESSAGE, false);
+  -h, --help  Print help
+
+"#]];
+    assert_error(err, expected_kind, message, false);
 }
 
 #[test]
@@ -105,10 +90,11 @@ fn kind_formats_validation_error() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::UnknownArgument;
-    static MESSAGE: &str = "\
-error: Found an argument which wasn't expected or isn't valid in this context
-";
-    assert_error(err, expected_kind, MESSAGE, true);
+    let message = str![[r#"
+error: unexpected argument found
+
+"#]];
+    assert_error(err, expected_kind, message, true);
 }
 
 #[test]
@@ -119,14 +105,15 @@ fn rich_formats_validation_error() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::UnknownArgument;
-    static MESSAGE: &str = "\
-error: Found argument 'unused' which wasn't expected, or isn't valid in this context
+    let message = str![[r#"
+error: unexpected argument 'unused' found
 
 Usage: test
 
-For more information try '--help'
-";
-    assert_error(err, expected_kind, MESSAGE, true);
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
 }
 
 #[test]
@@ -138,16 +125,42 @@ fn suggest_trailing() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::UnknownArgument;
-    static MESSAGE: &str = "\
-error: Found argument '--foo' which wasn't expected, or isn't valid in this context
+    let message = str![[r#"
+error: unexpected argument '--foo' found
 
-  If you tried to supply '--foo' as a value rather than a flag, use '-- --foo'
+  tip: to pass '--foo' as a value, use '-- --foo'
 
 Usage: rg [PATTERN]
 
-For more information try '--help'
-";
-    assert_error(err, expected_kind, MESSAGE, true);
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
+}
+
+#[test]
+#[cfg(feature = "error-context")]
+fn suggest_trailing_last() {
+    let cmd = Command::new("cargo")
+        .arg(arg!([TESTNAME]).last(true))
+        .arg(arg!(--"ignore-rust-version"));
+
+    let res = cmd.try_get_matches_from(["cargo", "--ignored"]);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let expected_kind = ErrorKind::UnknownArgument;
+    let message = str![[r#"
+error: unexpected argument '--ignored' found
+
+  tip: a similar argument exists: '--ignore-rust-version'
+  tip: to pass '--ignored' as a value, use '-- --ignored'
+
+Usage: cargo --ignore-rust-version [-- <TESTNAME>]
+
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
 }
 
 #[test]
@@ -159,14 +172,15 @@ fn trailing_already_in_use() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::UnknownArgument;
-    static MESSAGE: &str = "\
-error: Found argument '--foo' which wasn't expected, or isn't valid in this context
+    let message = str![[r#"
+error: unexpected argument '--foo' found
 
 Usage: rg [PATTERN]
 
-For more information try '--help'
-";
-    assert_error(err, expected_kind, MESSAGE, true);
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
 }
 
 #[test]
@@ -178,12 +192,110 @@ fn cant_use_trailing() {
     assert!(res.is_err());
     let err = res.unwrap_err();
     let expected_kind = ErrorKind::UnknownArgument;
-    static MESSAGE: &str = "\
-error: Found argument '--foo' which wasn't expected, or isn't valid in this context
+    let message = str![[r#"
+error: unexpected argument '--foo' found
 
 Usage: test
 
-For more information try '--help'
-";
-    assert_error(err, expected_kind, MESSAGE, true);
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
+}
+
+#[test]
+#[cfg(feature = "error-context")]
+#[cfg(feature = "suggestions")]
+fn cant_use_trailing_subcommand() {
+    let cmd = Command::new("test").subcommand(Command::new("bar"));
+
+    let res = cmd.try_get_matches_from(["test", "baz"]);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let expected_kind = ErrorKind::InvalidSubcommand;
+    let message = str![[r#"
+error: unrecognized subcommand 'baz'
+
+  tip: a similar subcommand exists: 'bar'
+
+Usage: test [COMMAND]
+
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
+}
+
+#[test]
+#[cfg(feature = "error-context")]
+#[cfg(feature = "suggestions")]
+fn unknown_argument_option() {
+    let cmd = Command::new("test").args([
+        Arg::new("current-dir").short('C'),
+        Arg::new("current-dir-unknown")
+            .long("cwd")
+            .aliases(["current-dir", "directory", "working-directory", "root"])
+            .value_parser(
+                clap::builder::UnknownArgumentValueParser::suggest_arg("-C")
+                    .and_suggest("not much else to say"),
+            )
+            .hide(true),
+    ]);
+
+    let res = cmd.clone().try_get_matches_from(["test"]);
+    assert!(res.is_ok());
+
+    let res = cmd.try_get_matches_from(["test", "--cwd", ".."]);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let expected_kind = ErrorKind::UnknownArgument;
+    let message = str![[r#"
+error: unexpected argument '--cwd <current-dir-unknown>' found
+
+  tip: a similar argument exists: '-C'
+  tip: not much else to say
+
+Usage: test [OPTIONS]
+
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
+}
+
+#[test]
+#[cfg(feature = "error-context")]
+#[cfg(feature = "suggestions")]
+fn unknown_argument_flag() {
+    let cmd = Command::new("test").args([
+        Arg::new("ignore-rust-version").long("ignore-rust-version"),
+        Arg::new("libtest-ignore")
+            .long("ignored")
+            .action(ArgAction::SetTrue)
+            .value_parser(
+                clap::builder::UnknownArgumentValueParser::suggest_arg("-- --ignored")
+                    .and_suggest("not much else to say"),
+            )
+            .hide(true),
+    ]);
+
+    let res = cmd.clone().try_get_matches_from(["test"]);
+    assert!(res.is_ok());
+
+    let res = cmd.try_get_matches_from(["test", "--ignored"]);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    let expected_kind = ErrorKind::UnknownArgument;
+    let message = str![[r#"
+error: unexpected argument '--ignored' found
+
+  tip: a similar argument exists: '-- --ignored'
+  tip: not much else to say
+
+Usage: test [OPTIONS]
+
+For more information, try '--help'.
+
+"#]];
+    assert_error(err, expected_kind, message, true);
 }

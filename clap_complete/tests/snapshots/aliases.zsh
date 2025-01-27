@@ -14,20 +14,20 @@ _my-app() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
-'-o+[cmd option]: : ' \
-'-O+[cmd option]: : ' \
-'--option=[cmd option]: : ' \
-'--opt=[cmd option]: : ' \
+    _arguments "${_arguments_options[@]}" : \
+'-o+[cmd option]: :_default' \
+'-O+[cmd option]: :_default' \
+'--option=[cmd option]: :_default' \
+'--opt=[cmd option]: :_default' \
 '-f[cmd flag]' \
 '-F[cmd flag]' \
 '--flag[cmd flag]' \
 '--flg[cmd flag]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
-'::positional:' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+'::positional:_default' \
 && ret=0
 }
 
@@ -37,4 +37,8 @@ _my-app_commands() {
     _describe -t commands 'my-app commands' commands "$@"
 }
 
-_my-app "$@"
+if [ "$funcstack[1]" = "_my-app" ]; then
+    _my-app "$@"
+else
+    compdef _my-app my-app
+fi

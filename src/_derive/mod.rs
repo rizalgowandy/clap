@@ -126,9 +126,13 @@
 //! magic attributes documentation for details.  This allows users to access the
 //! raw behavior of an attribute via `<attr>(<value>)` syntax.
 //!
+//! <div class="warning">
+//!
 //! **NOTE:** Some attributes are inferred from [Arg Types](#arg-types) and [Doc
 //! Comments](#doc-comments).  Explicit attributes take precedence over inferred
 //! attributes.
+//!
+//! </div>
 //!
 //! ### Command Attributes
 //!
@@ -141,13 +145,14 @@
 //!
 //! **Magic attributes:**
 //! - `name  = <expr>`: [`Command::name`][crate::Command::name]
-//!   - When not present: [crate `name`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field) (if on [`Parser`][crate::Parser] container), variant name (if on [`Subcommand`][crate::Subcommand] variant)
+//!   - When not present: [package `name`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-name-field) (if on [`Parser`][crate::Parser] container), variant name (if on [`Subcommand`][crate::Subcommand] variant)
 //! - `version [= <expr>]`: [`Command::version`][crate::Command::version]
 //!   - When not present: no version set
 //!   - Without `<expr>`: defaults to [crate `version`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-version-field)
 //! - `author [= <expr>]`: [`Command::author`][crate::Command::author]
 //!   - When not present: no author set
 //!   - Without `<expr>`: defaults to [crate `authors`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-authors-field)
+//!   - **NOTE:** A custom [`help_template`][crate::Command::help_template] is needed for author to show up.
 //! - `about [= <expr>]`: [`Command::about`][crate::Command::about]
 //!   - When not present: [Doc comment summary](#doc-comments)
 //!   - Without `<expr>`: [crate `description`](https://doc.rust-lang.org/cargo/reference/manifest.html#the-description-field) ([`Parser`][crate::Parser] container)
@@ -189,23 +194,42 @@
 //!   [`Subcommand`][crate::Subcommand])
 //!   - When `Option<T>`, the subcommand becomes optional
 //!
+//! See [Configuring the Parser][_tutorial#configuring-the-parser] and
+//! [Subcommands][_tutorial#subcommands] from the tutorial.
+//!
 //! ### ArgGroup Attributes
 //!
 //! These correspond to the [`ArgGroup`][crate::ArgGroup] which is implicitly created for each
 //! `Args` derive.
 //!
-//! At the moment, only `#[group(skip)]` is supported
+//! **Raw attributes:**  Any [`ArgGroup` method][crate::ArgGroup] can also be used as an attribute, see [Terminology](#terminology) for syntax.
+//! - e.g. `#[group(required = true)]` would translate to `arg_group.required(true)`
+//!
+//! **Magic attributes**:
+//! - `id = <expr>`: [`ArgGroup::id`][crate::ArgGroup::id]
+//!   - When not present: struct's name is used
+//! - `skip [= <expr>]`: Ignore this field, filling in with `<expr>`
+//!   - Without `<expr>`: fills the field with `Default::default()`
+//!
+//! Note:
+//! - For `struct`s, [`multiple = true`][crate::ArgGroup::multiple] is implied
+//! - `enum` support is tracked at [#2621](https://github.com/clap-rs/clap/issues/2621)
+//!
+//! See [Argument Relations][_tutorial#argument-relations] from the tutorial.
 //!
 //! ### Arg Attributes
 //!
 //! These correspond to a [`Arg`][crate::Arg].
+//! The default state for a field without attributes is to be a positional argument with [behavior
+//! inferred from the field type](#arg-types).
+//! `#[arg(...)]` attributes allow overriding or extending those defaults.
 //!
 //! **Raw attributes:**  Any [`Arg` method][crate::Arg] can also be used as an attribute, see [Terminology](#terminology) for syntax.
-//! - e.g. `#[arg(max_values(3))]` would translate to `arg.max_values(3)`
+//! - e.g. `#[arg(num_args(..=3))]` would translate to `arg.num_args(..=3)`
 //!
 //! **Magic attributes**:
 //! - `id = <expr>`: [`Arg::id`][crate::Arg::id]
-//!   - When not present: case-converted field name is used
+//!   - When not present: field's name is used
 //! - `value_parser [= <expr>]`: [`Arg::value_parser`][crate::Arg::value_parser]
 //!   - When not present: will auto-select an implementation based on the field type using
 //!     [`value_parser!`][crate::value_parser!]
@@ -232,7 +256,8 @@
 //!   - Without `<expr>`: fills the field with `Default::default()`
 //! - `default_value = <str>`: [`Arg::default_value`][crate::Arg::default_value] and [`Arg::required(false)`][crate::Arg::required]
 //! - `default_value_t [= <expr>]`: [`Arg::default_value`][crate::Arg::default_value] and [`Arg::required(false)`][crate::Arg::required]
-//!   - Requires `std::fmt::Display` or `#[arg(value_enum)]`
+//!   - Requires `std::fmt::Display` that roundtrips correctly with the
+//!     [`Arg::value_parser`][crate::Arg::value_parser] or `#[arg(value_enum)]`
 //!   - Without `<expr>`, relies on `Default::default()`
 //! - `default_values_t = <expr>`: [`Arg::default_values`][crate::Arg::default_values] and [`Arg::required(false)`][crate::Arg::required]
 //!   - Requires field arg to be of type `Vec<T>` and `T` to implement `std::fmt::Display` or `#[arg(value_enum)]`
@@ -244,11 +269,16 @@
 //!   - Requires field arg to be of type `Vec<T>` and `T` to implement `std::convert::Into<OsString>` or `#[arg(value_enum)]`
 //!   - `<expr>` must implement `IntoIterator<T>`
 //!
+//! See [Adding Arguments][_tutorial#adding-arguments] and [Validation][_tutorial#validation] from the
+//! tutorial.
+//!
 //! ### ValueEnum Attributes
 //!
 //! - `rename_all = <string_literal>`: Override default field / variant name case conversion for [`PossibleValue::new`][crate::builder::PossibleValue]
 //!   - When not present: `"kebab-case"`
 //!   - Available values: `"camelCase"`, `"kebab-case"`, `"PascalCase"`, `"SCREAMING_SNAKE_CASE"`, `"snake_case"`, `"lower"`, `"UPPER"`, `"verbatim"`
+//!
+//! See [Enumerated values][_tutorial#enumerated-values] from the tutorial.
 //!
 //! ### Possible Value Attributes
 //!
@@ -268,23 +298,29 @@
 //!
 //! `clap` assumes some intent based on the type used:
 //!
-//! | Type                | Effect                               | Implies                                                     |
-//! |---------------------|--------------------------------------|-------------------------------------------------------------|
-//! | `()`                | user-defined                         | `.action(ArgAction::Set).required(false)`                   |
-//! | `bool`              | flag                                 | `.action(ArgAction::SetTrue)`                               |
-//! | `Option<T>`         | optional argument                    | `.action(ArgAction::Set).required(false)`                   |
-//! | `Option<Option<T>>` | optional value for optional argument | `.action(ArgAction::Set).required(false).num_args(0..=1)`   |
-//! | `T`                 | required argument                    | `.action(ArgAction::Set).required(!has_default)`            |
-//! | `Vec<T>`            | `0..` occurrences of argument        | `.action(ArgAction::Append).required(false)`  |
-//! | `Option<Vec<T>>`    | `0..` occurrences of argument        | `.action(ArgAction::Append).required(false)`  |
+//! | Type                  | Effect                                               | Implies                                                     | Notes |
+//! |-----------------------|------------------------------------------------------|-------------------------------------------------------------|-------|
+//! | `()`                  | user-defined                                         | `.action(ArgAction::Set).required(false)`                   |       |
+//! | `bool`                | flag                                                 | `.action(ArgAction::SetTrue)`                               |       |
+//! | `Option<T>`           | optional argument                                    | `.action(ArgAction::Set).required(false)`                   |       |
+//! | `Option<Option<T>>`   | optional value for optional argument                 | `.action(ArgAction::Set).required(false).num_args(0..=1)`   |       |
+//! | `T`                   | required argument                                    | `.action(ArgAction::Set).required(!has_default)`            |       |
+//! | `Vec<T>`              | `0..` occurrences of argument                        | `.action(ArgAction::Append).required(false)`  |       |
+//! | `Option<Vec<T>>`      | `0..` occurrences of argument                        | `.action(ArgAction::Append).required(false)`  |       |
+//! | `Vec<Vec<T>>`         | `0..` occurrences of argument, grouped by occurrence | `.action(ArgAction::Append).required(false)`  | requires `unstable-v5` |
+//! | `Option<Vec<Vec<T>>>` | `0..` occurrences of argument, grouped by occurrence | `.action(ArgAction::Append).required(false)`  | requires `unstable-v5` |
 //!
 //! In addition, [`.value_parser(value_parser!(T))`][crate::value_parser!] is called for each
 //! field.
 //!
 //! Notes:
 //! - For custom type behavior, you can override the implied attributes/settings and/or set additional ones
-//! - `Option<Vec<T>>` will be `None` instead of `vec![]` if no arguments are provided.
+//!   - To force any inferred type (like `Vec<T>`) to be treated as `T`, you can refer to the type
+//!     by another means, like using `std::vec::Vec` instead of `Vec`.  For improving this, see
+//!     [#4626](https://github.com/clap-rs/clap/issues/4626).
+//! - `Option<Vec<T>>` and `Option<Vec<Vec<T>>` will be `None` instead of `vec![]` if no arguments are provided.
 //!   - This gives the user some flexibility in designing their argument, like with `num_args(0..)`
+//! - `Vec<Vec<T>>` will need [`Arg::num_args`][crate::Arg::num_args] set to be meaningful
 //!
 //! ## Doc Comments
 //!
@@ -320,6 +356,8 @@
 //! }
 //! ```
 //!
+//! <div class="warning">
+//!
 //! **NOTE:** Attributes have priority over doc comments!
 //!
 //! **Top level doc comments always generate `Command::about/long_about` calls!**
@@ -327,6 +365,8 @@
 //! use the `about` / `long_about` attributes to override the calls generated from
 //! the doc comment.  To clear `long_about`, you can use
 //! `#[command(long_about = None)]`.
+//!
+//! </div>
 //!
 //! ### Pre-processing
 //!
@@ -471,8 +511,22 @@
 //!   [`Parser`][crate::Parser])
 //! - Proactively check for bad [`Command`][crate::Command] configurations by calling
 //!   [`Command::debug_assert`][crate::Command::debug_assert] in a test
-//!   ([example](../tutorial_derive/05_01_assert.rs))
+//!   ([example][_tutorial#testing])
 //! - Always remember to [document](#doc-comments) args and commands with `#![deny(missing_docs)]`
+
+// Point people here that search for attributes that don't exist in the derive (a subset of magic
+// attributes)
+#![doc(alias = "skip")]
+#![doc(alias = "verbatim_doc_comment")]
+#![doc(alias = "flatten")]
+#![doc(alias = "external_subcommand")]
+#![doc(alias = "subcommand")]
+#![doc(alias = "rename_all")]
+#![doc(alias = "rename_all_env")]
+#![doc(alias = "default_value_t")]
+#![doc(alias = "default_values_t")]
+#![doc(alias = "default_value_os_t")]
+#![doc(alias = "default_values_os_t")]
 
 pub mod _tutorial;
 #[doc(inline)]

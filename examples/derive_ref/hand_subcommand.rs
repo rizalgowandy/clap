@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use clap::error::{Error, ErrorKind};
 use clap::{ArgMatches, Args as _, Command, FromArgMatches, Parser, Subcommand};
 
@@ -69,11 +70,11 @@ impl Subcommand for CliSub {
 struct Cli {
     #[arg(short, long)]
     top_level: bool,
-    #[clap(subcommand)]
+    #[command(subcommand)]
     subcommand: CliSub,
 }
 
 fn main() {
     let args = Cli::parse();
-    println!("{:#?}", args);
+    println!("{args:#?}");
 }

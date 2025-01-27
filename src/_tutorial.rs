@@ -7,36 +7,29 @@
 //
 // See also the general CONTRIBUTING
 
-//! # Documentation: Builder Tutorial
+//! ## Tutorial for the Builder API
 //!
-//! 1. [Quick Start](#quick-start)
-//! 2. [Configuring the Parser](#configuring-the-parser)
-//! 3. [Adding Arguments](#adding-arguments)
-//!     1. [Positionals](#positionals)
-//!     2. [Options](#options)
-//!     3. [Flags](#flags)
-//!     4. [Subcommands](#subcommands)
-//!     5. [Defaults](#defaults)
-//! 4. Validation
-//!     1. [Enumerated values](#enumerated-values)
-//!     2. [Validated values](#validated-values)
-//!     3. [Argument Relations](#argument-relations)
-//!     4. [Custom Validation](#custom-validation)
-//! 5. [Testing](#testing)
-//!
-//! See also
-//! - [FAQ: When should I use the builder vs derive APIs?][crate::_faq#when-should-i-use-the-builder-vs-derive-apis]
-//! - The [cookbook][crate::_cookbook] for more application-focused examples
+//! *See the side bar for the Table of Contents*
 //!
 //! ## Quick Start
 //!
 //! You can create an application with several arguments using usage strings.
 //!
+//! First, ensure `clap` is available:
+//! ```console
+//! $ cargo add clap
+//! ```
+//!
+//! Here is a preview of the type of application you can make:
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/01_quick.rs")]
 //! ```
 //!
 #![doc = include_str!("../examples/tutorial_builder/01_quick.md")]
+//!
+//! See also
+//! - [FAQ: When should I use the builder vs derive APIs?][crate::_faq#when-should-i-use-the-builder-vs-derive-apis]
+//! - The [cookbook][crate::_cookbook] for more application-focused examples
 //!
 //! ## Configuring the Parser
 //!
@@ -57,7 +50,7 @@
 #![doc = include_str!("../examples/tutorial_builder/02_crate.md")]
 //!
 //! You can use [`Command`][crate::Command] methods to change the application level behavior of
-//! clap.
+//! clap, like [`Command::next_line_help`].
 //!
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/02_app_settings.rs")]
@@ -66,9 +59,16 @@
 //!
 //! ## Adding Arguments
 //!
+//! 1. [Positionals](#positionals)
+//! 2. [Options](#options)
+//! 3. [Flags](#flags)
+//! 4. [Subcommands](#subcommands)
+//! 5. [Defaults](#defaults)
+//!
+//!
 //! ### Positionals
 //!
-//! You can have users specify values by their position on the command-line:
+//! By default, an [`Arg`] defines a positional argument:
 //!
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/03_03_positional.rs")]
@@ -76,7 +76,7 @@
 #![doc = include_str!("../examples/tutorial_builder/03_03_positional.md")]
 //!
 //! Note that the default [`ArgAction`][crate::ArgAction] is [`Set`][crate::ArgAction::Set].  To
-//! accept multiple values, use [`Append`][crate::ArgAction::Append]:
+//! accept multiple values, override the [action][Arg::action] with [`Append`][crate::ArgAction::Append]:
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/03_03_positional_mult.rs")]
 //! ```
@@ -95,7 +95,7 @@
 #![doc = include_str!("../examples/tutorial_builder/03_02_option.md")]
 //!
 //! Note that the default [`ArgAction`][crate::ArgAction] is [`Set`][crate::ArgAction::Set].  To
-//! accept multiple occurrences, use [`Append`][crate::ArgAction::Append]:
+//! accept multiple occurrences, override the [action][Arg::action] with [`Append`][crate::ArgAction::Append]:
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/03_02_option_mult.rs")]
 //! ```
@@ -141,7 +141,13 @@
 //!
 //! ## Validation
 //!
-//! By default, arguments are assumed to be `String`s and only UTF-8 validation is performed.
+//! 1. [Enumerated values](#enumerated-values)
+//! 2. [Validated values](#validated-values)
+//! 3. [Argument Relations](#argument-relations)
+//! 4. [Custom Validation](#custom-validation)
+//!
+//! An appropriate default parser/validator will be selected for the field's type.  See
+//! [`value_parser!`][crate::value_parser!] for more details.
 //!
 //! ### Enumerated values
 //!
@@ -149,7 +155,7 @@
 //! [`PossibleValuesParser`][crate::builder::PossibleValuesParser] or [`Arg::value_parser(["val1",
 //! ...])`][crate::Arg::value_parser] for short.
 //!
-//! This allows you specify the valid values for that argument. If the user does not use one of
+//! This allows you to specify the valid values for that argument. If the user does not use one of
 //! those specific values, they will receive a graceful exit with error message informing them
 //! of the mistake, and what the possible valid values are
 //!
@@ -169,14 +175,14 @@
 //!
 //! ### Validated values
 //!
-//! More generally, you can validate and parse into any data type.
+//! More generally, you can validate and parse into any data type with [`Arg::value_parser`].
 //!
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/04_02_parse.rs")]
 //! ```
 #![doc = include_str!("../examples/tutorial_builder/04_02_parse.md")]
 //!
-//! A custom parser can be used to improve the error messages or provide additional validation:
+//! A [custom parser][TypedValueParser] can be used to improve the error messages or provide additional validation:
 //!
 //! ```rust
 #![doc = include_str!("../examples/tutorial_builder/04_02_validate.rs")]
@@ -220,3 +226,12 @@
 //! ```rust,no_run
 #![doc = include_str!("../examples/tutorial_builder/05_01_assert.rs")]
 //! ```
+//!
+//! ## Next Steps
+//!
+//! - [Cookbook][crate::_cookbook] for application-focused examples
+//! - Explore more features in the [API reference][super]
+//!
+//! For support, see [Discussions](https://github.com/clap-rs/clap/discussions)
+#![allow(unused_imports)]
+use crate::builder::*;

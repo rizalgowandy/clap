@@ -17,7 +17,7 @@ Commands:
   help   Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help  Print help information
+  -h, --help  Print help
 
 $ git help
 A fictional versioning CLI
@@ -33,7 +33,7 @@ Commands:
   help   Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help  Print help information
+  -h, --help  Print help
 
 $ git help add
 adds things
@@ -44,7 +44,7 @@ Arguments:
   <PATH>...  Stuff to add
 
 Options:
-  -h, --help  Print help information
+  -h, --help  Print help
 
 ```
 
@@ -60,7 +60,7 @@ Arguments:
   <PATH>...  Stuff to add
 
 Options:
-  -h, --help  Print help information
+  -h, --help  Print help
 
 $ git add Cargo.toml Cargo.lock
 Adding ["Cargo.toml", "Cargo.lock"]
@@ -71,24 +71,37 @@ Default subcommand:
 ```console
 $ git stash -h
 Usage: git[EXE] stash [OPTIONS]
-       git[EXE] stash <COMMAND>
-
-Commands:
-  push   
-  pop    
-  apply  
-  help   Print this message or the help of the given subcommand(s)
+       git[EXE] stash push [OPTIONS]
+       git[EXE] stash pop [STASH]
+       git[EXE] stash apply [STASH]
+       git[EXE] stash help [COMMAND]...
 
 Options:
   -m, --message <MESSAGE>  
-  -h, --help               Print help information
+  -h, --help               Print help
+
+git[EXE] stash push:
+  -m, --message <MESSAGE>  
+  -h, --help               Print help
+
+git[EXE] stash pop:
+  -h, --help   Print help
+  [STASH]  
+
+git[EXE] stash apply:
+  -h, --help   Print help
+  [STASH]  
+
+git[EXE] stash help:
+Print this message or the help of the given subcommand(s)
+  [COMMAND]...  Print help for the subcommand(s)
 
 $ git stash push -h
 Usage: git[EXE] stash push [OPTIONS]
 
 Options:
   -m, --message <MESSAGE>  
-  -h, --help               Print help information
+  -h, --help               Print help
 
 $ git stash pop -h
 Usage: git[EXE] stash pop [STASH]
@@ -97,7 +110,7 @@ Arguments:
   [STASH]  
 
 Options:
-  -h, --help  Print help information
+  -h, --help  Print help
 
 $ git stash -m "Prototype"
 Pushing Some("Prototype")
@@ -134,7 +147,7 @@ Arguments:
 
 Options:
       --color[=<WHEN>]  [default: auto] [possible values: always, auto, never]
-  -h, --help            Print help information
+  -h, --help            Print help
 
 $ git diff
 Diffing stage..worktree  (color=auto)

@@ -1,8 +1,7 @@
 [package]
 name = "clap_lex"
-version = "0.3.0"
+version = "0.7.4"
 description = "Minimal, flexible command line parser"
-repository = "https://github.com/clap-rs/clap/tree/master/clap_lex"
 categories = ["command-line-interface"]
 keywords = [
   "argument",
@@ -11,18 +10,11 @@ keywords = [
   "parser",
   "parse"
 ]
-license = "MIT OR Apache-2.0"
-edition = "2021"
-rust-version = "1.60.0"  # MSRV
-include = [
-  "build.rs",
-  "src/**/*",
-  "Cargo.toml",
-  "LICENSE*",
-  "README.md",
-  "benches/**/*",
-  "examples/**/*"
-]
+repository.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+include.workspace = true
 
 [package.metadata.release]
 pre-release-replacements = [
@@ -34,8 +26,11 @@ pre-release-replacements = [
   {file="README.md", search="github.com/clap-rs/clap/blob/[^/]+/", replace="github.com/clap-rs/clap/blob/{{tag_name}}/", exactly=4, prerelease = true},
 ]
 
+[dev-dependencies]
+automod = "1.0.14"
+
 [lib]
 bench = false
 
-[dependencies]
-os_str_bytes = { version = "6.0", default-features = false, features = ["raw_os_str"] }
+[lints]
+workspace = true

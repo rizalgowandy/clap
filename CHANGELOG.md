@@ -9,9 +9,645 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Breaking Changes
 
 - Made `ArgPredicate` `non_exhaustive`
+- *(help)* Change default `Command::term_width` to "source format"
+- *(help)* Change default `Command::max_term_width` to 100
+- *(derive)* `Vec<Vec<T>>` types are now assuming to capture occurrences
+
+### Features
+
+- *(derive)* Group values by their occurrence with `Vec<Vec<T>>`
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+
+## [4.5.27] - 2025-01-20
+
+### Documentation
+
+- Iterate on tutorials and reference based on feedback
+
+## [4.5.26] - 2025-01-09
+
+### Fixes
+
+- *(error)* Reduce binary size with the `suggestions` feature
+
+## [4.5.25] - 2025-01-09
+
+### Fixes
+
+- *(help)* Reduce binary size
+
+## [4.5.24] - 2025-01-07
+
+### Fixes
+
+- *(parser)* Correctly handle defaults with `ignore_errors(true)` and when a suggestion is provided for an unknown argument
+
+## [4.5.23] - 2024-12-05
+
+### Fixes
+
+- *(parser)* When check `allow_negative_numbers`, allow `E` again
+
+## [4.5.22] - 2024-12-03
+
+### Fixes
+
+- *(assert)* Catch bugs with arguments requiring themself
+
+## [4.5.21] - 2024-11-13
+
+### Fixes
+
+- *(parser)* Ensure defaults are filled in on error with `ignore_errors(true)`
+
+## [4.5.20] - 2024-10-08
+
+### Features
+
+- *(unstable)* Add `CommandExt`
+
+## [4.5.19] - 2024-10-01
+
+### Internal
+
+- Update dependencies
+
+## [4.5.18] - 2024-09-20
+
+### Features
+
+- *(builder)* Expose `Arg::get_display_order` and `Command::get_display_order`
+
+## [4.5.17] - 2024-09-04
+
+### Fixes
+
+- *(help)* Style required argument groups
+- *(derive)* Improve error messages when unsupported fields are used
+
+## [4.5.16] - 2024-08-15
+
+### Fixes
+
+- *(derive)* Improve error messages when `derive` feature is missing
+
+## [4.5.15] - 2024-08-10
+
+### Compatiblity
+
+- *(unstable-ext)* `Arg::remove` changed return types
+
+### Fixes
+
+- *(unstable-ext)* Make `Arg::remove` return the removed item
+
+## [4.5.14] - 2024-08-08
+
+### Features
+
+- *(unstable-ext)* Added `Arg::add` for attaching arbitrary state, like completion hints, to `Arg` without `Arg` knowing about it
+
+## [4.5.13] - 2024-07-31
+
+### Fixes
+
+- *(derive)* Improve error message when `#[flatten]`ing an optional `#[group(skip)]`
+- *(help)* Properly wrap long subcommand descriptions in help
+
+## [4.5.12] - 2024-07-31
+
+## [4.5.11] - 2024-07-25
+
+## [4.5.10] - 2024-07-23
+
+## [4.5.9] - 2024-07-09
+
+### Fixes
+
+- *(error)* When defining a custom help flag, be sure to suggest it like we do the built-in one
+
+## [4.5.8] - 2024-06-28
+
+### Fixes
+
+- Reduce extra flushes
+
+## [4.5.7] - 2024-06-10
+
+### Fixes
+
+- Clean up error message when too few arguments for `num_args`
+
+## [4.5.6] - 2024-06-06
+
+## [4.5.5] - 2024-06-06
+
+### Fixes
+
+- Allow `exclusive` to override `required_unless_present`, `required_unless_present_any`, `required_unless_present_all`
+
+## [4.5.4] - 2024-03-25
+
+### Fixes
+
+- *(derive)* Allow non-literal `#[arg(id)]` attributes again
+
+## [4.5.3] - 2024-03-15
+
+### Internal
+
+- *(derive)* Update `heck`
+
+## [4.5.2] - 2024-03-06
+
+### Fixes
+
+- *(macros)* Silence a warning
+
+## [4.5.1] - 2024-02-16
+
+### Fixes
+
+- *(error)* Include suggestion to add `--` even if there is a "did you mean" so long as `last` or `trailing_var_arg` is used
+
+## [4.5.0] - 2024-02-08
+
+### Compatibility
+
+- Update MSRV to 1.74
+
+## [4.4.18] - 2024-01-16
+
+### Fixes
+
+- *(error)* When lacking `usage` feature, ensure the list of required arguments is unique
+
+## [4.4.17] - 2024-01-15
+
+### Fixes
+
+- Fix `panic!` when mixing `args_conflicts_with_subcommands` with `ArgGroup` (which is implicit with `derive`) introduced in 4.4.15
+
+## [4.4.16] - 2024-01-12
+
+### Fixes
+
+- Ensure invalid escape sequences in user-defined strings are correctly stripped when terminal doesn't support color
+
+## [4.4.15] - 2024-01-11
+
+### Fixes
+
+- Improve error for `args_conflicts_with_subcommands`
+- Ensure we error for `args_conflicts_with_subcommands` when using subcommand short and long flags
+
+## [4.4.14] - 2024-01-08
+
+### Documentation
+
+- Fix `find` cookbook entry to allow repeats of flags/options
+
+### Features
+
+- Allow `num_args(0)` on options which allows making them emulate being a flag for position-tracking flags
+
+## [4.4.13] - 2024-01-04
+
+### Documentation
+
+- Fix link to structopt migration guide
+
+## [4.4.12] - 2023-12-28
+
+### Performance
+
+- Only ask `TypedValueParser` for possible values if needed
+
+## [4.4.11] - 2023-12-04
+
+### Features
+
+- Add `Command::mut_group`
+
+## [4.4.10] - 2023-11-28
+
+### Documentation
+
+- Link out to changelog
+- Cross link derive's attribute reference to derive tutorial
+
+## [4.4.9] - 2023-11-27
+
+### Fixes
+
+- *(help)* Show correct `Command::about` under flattened headings
+- *(help)* Respect `hide` when flattening subcommands
+
+## [4.4.8] - 2023-11-10
+
+### Features
+
+- Add `Command::flatten_help` to allow `git stash -h` like help for subcommands
+
+## [4.4.7] - 2023-10-24
+
+### Performance
+
+- Reduced code size
+
+## [4.4.6] - 2023-09-28
+
+### Internal
+
+- Upgrade `anstream`
+
+## [4.4.5] - 2023-09-25
+
+### Fixes
+
+- *(parser)* When inferring subcommand `name` or `long_flag`, allow ambiguous-looking matches that unambiguously map back to the same command
+- *(parser)* When inferring subcommand `long_flag`, don't panic
+- *(assert)* Clarify what action is causing a positional that doesn't set values which is especially useful for derive users
+
+## [4.4.4] - 2023-09-18
+
+### Internal
+
+- Update `terminal_size` to 0.3
+
+## [4.4.3] - 2023-09-12
+
+### Documentation
+
+- *(derive)* Clarify use of attributes within the tutorial
+- Split sections in the builder and derive tutorials into separate modules
+
+## [4.4.2] - 2023-08-31
+
+### Performance
+
+- Improve build times by removing `once_cell` dependency
+
+## [4.4.1] - 2023-08-28
+
+### Features
+
+- Stabilize `Command::styles`
+
+## [4.4.0] - 2023-08-24
+
+### compatibility
+
+- update msrv to 1.70.0
+
+## [4.3.24] - 2023-08-23
+
+### Fixes
+
+- Ensure column padding is preserved in `--help` with custom templates
+
+## [4.3.23] - 2023-08-18
+
+### Fixes
+
+- Fixed `UnknownArgumentValueParser` to not error on flag's absence
+
+## [4.3.22] - 2023-08-17
+
+### Features
+
+- Add `UnknownArgumentValueParser` for injecting errors for improving the experience with errors
+
+## [4.3.21] - 2023-08-08
+
+### Features
+
+- Expose `TryMapValueParser` so the type can be named
+
+## [4.3.20] - 2023-08-08
+
+### Features
+
+- `Command::mut_args` for modifying all arguments en masse
+
+## [4.3.19] - 2023-07-21
+
+### Fixes
+
+- *(parse)* Respect `value_terminator` even in the presence of later multiple-value positional arguments
+
+## [4.3.18] - 2023-07-21
+
+### Fixes
+
+- *(parse)* Suggest `--` in fewer places where it won't work
+
+## [4.3.17] - 2023-07-19
+
+### Fixes
+
+- *(help)* Address a regression in wrapping `PossibleValue` descriptions in `--help`
+
+## [4.3.16] - 2023-07-18
+
+### Fixes
+
+- Don't assert when stateful value parsers fail on defaults (e.g. checking if a path exists)
+
+## [4.3.15] - 2023-07-18
+
+### Features
+
+- *(unstable-styles)* Re-export `anstyle`
+
+### Documentation
+
+- *(unstable-styles)* Provide more examples
+
+## [4.3.14] - 2023-07-17
+
+### Features
+
+- `ArgAction::HelpShort` and `ArgAction::HelpLong` for explicitly specifying which style of help to display
+
+### Fixes
+
+- Skip `[OPTIONS]` in usage if a help or version `ArgAction` is used
+
+## [4.3.13] - 2023-07-17
+
+## [4.3.12] - 2023-07-14
+
+### Fixes
+
+- *(derive)* Don't error on enum variant field attributes
+
+## [4.3.11] - 2023-07-05
+
+### Features
+
+- *(derive)* Support fields wrapped in `num::Wrapping`, `Box`, or `Arc`
+- *(derive)* Support `Box<str>`, `Box<OsStr>`, and `Box<Path>`
+
+## [4.3.10] - 2023-06-30
+
+### Performance
+
+- Drop a dependency, reducing binary size by 1.3 KiB
+
+## [4.3.9] - 2023-06-28
+
+### Fixes
+
+- `Command::ignore_errors` no longer masks help/version
+
+## [4.3.8] - 2023-06-23
+
+### Fixes
+
+- Error on ambiguity with `infer_long_arg`, rather than arbitrarily picking one, matching the documentation and subcommand's behavior
+
+## [4.3.7] - 2023-06-23
+
+### Documentation
+
+- Further clarify magic behavior in derive tutorial
+- Further clarify derive API's relationship to builder within the tutorial
+
+## [4.3.6] - 2023-06-23
+
+### Documentation
+
+- Suggest `clio`
+
+## [4.3.5] - 2023-06-20
+
+- `ColorChoice::possible_values` is added to simplify things for builder users
+
+### Fixes
+
+- `ColorChoice::to_possible_value` no longer includes descriptions, encouraging shorter help where possible
+
+## [4.3.4] - 2023-06-14
+
+### Features
+
+- Add `Error::exit_code`
+
+## [4.3.3] - 2023-06-09
+
+### Features
+
+- `Command::defer` for delayed initialization of subcommands to reduce startup times of large applications like deno
+
+## [4.3.2] - 2023-06-05
+
+### Fixes
+
+- *(derive)* Don't produce `unused_equalifications` warnings when someone brings a clap type into scope
+
+## [4.3.1] - 2023-06-02
+
+### Performance
+
+- *(derive)* Reduce the amount of generated code
+
+## [4.3.0] - 2023-05-19
+
+### Fixes
+
+- *(assert)* Allow multiple, value-terminated, positional arguments
+- *(assert)* Clear up language on `last` assertion
+- *(parser)* Correctly assign values to arguments when using multiple, value-termianted, positional arguments
+- *(parser)* Ensure `value_terminator` has higher precedence than `allow_hyphen_values`
+- *(help)* Only use next-line-help on subcommand list when explicitly specified, not just with `--help`
+- *(help)* Correctly align possible values list
+- *(help)* Don't waste code, vertical space in moving possible value descriptions to next line
+
+## [4.2.7] - 2023-05-02
+
+### Fixes
+
+- Correctly track remaining length for iterators provided by `ArgMatches`
+
+## [4.2.6] - 2023-05-02
+
+### Features
+
+- `impl Eq<std::any::TypeId> for clap_builder::util::AnyValueId`
+
+## [4.2.5] - 2023-04-27
+
+### Fixes
+
+- Improve panic when a group requires a non-existent ID
+
+## [4.2.4] - 2023-04-19
+
+### Documentation
+
+- Corrected docs for `Command::style`
+
+## [4.2.3] - 2023-04-18
+
+### Features
+
+- `Command::styles` for theming help/errors (behind `unstable-styles`)
+
+## [4.2.2] - 2023-04-13
+
+### Internal
+
+- Update dependencies
+
+## [4.2.1] - 2023-03-28
+
+### Fixes
+
+- Don't highlight uninteresting parts of the error message
+
+## [4.2.0] - 2023-03-28
+
+### Compatibility
+
+- Removed the languishing `unstable-replace` feature (open to discussion at [#2836](https://github.com/clap-rs/clap/issues/2836))
+- Removed the stablized `unstable-grouped` feature
+
+### Features
+
+- Allow any `StyledStr` to accept text styled with ANSI escape codes
+- Respect `CLICOLOR`, `CLICOLOR_FORCE`
+
+### Fixes
+
+- Lighten the tone for "unexpected argument" errors (open to discussion at [#4638](https://github.com/clap-rs/clap/issues/4638))
+
+## [4.1.14] - 2023-03-28
+
+### Features
+
+- *(derive)* `#[group]` raw attribute support
+
+### Performance
+
+- *(derive)* `clap_builder` was pulled out of `clap` so it could build in parallel to `clap_derive`
+- `os_str_bytes` dependency was removed for faster builds and smaller binaries
+
+## [4.1.13] - 2023-03-18
+
+### Performance
+
+- Reduce repeated alloc calls when building a `Command`
+- Reduce duplicate dependencies for faster builds
+
+## [4.1.12] - 2023-03-18
+
+### Internal
+
+- *(derive)* Update to `syn` v2
+
+### Performance
+
+- *(derive)* Faster build times by dropping `proc-macro-error` dependency
+
+## [4.1.11] - 2023-03-17
+
+### Internal
+
+- Update `bitflags`
+
+## [4.1.10] - 2023-03-17
+
+### Fixes
+
+- *(help)* On Windows, avoid underlined text artifacts
+
+## [4.1.9] - 2023-03-16
+
+### Fixes
+
+- *(assert)* Improve the assert when using the wrong action with `get_count` / `get_flag`
+
+## [4.1.8] - 2023-02-27
+
+### Fixes
+
+- *(derive)* Don't `deny` lints on the users behalf
+
+## [4.1.7] - 2023-02-27
+
+### Fixes
+
+- *(derive)* Hide some nightly clippy warnings
+
+## [4.1.6] - 2023-02-15
+
+### Fixes
+
+- *(help)* Don't show long help for `--help` just because hidden possible values include a description
+
+## [4.1.5] - 2023-02-15
+
+### Fixes
+
+- *(help)* Don't show long help for `--help` just because a hidden arg has a possible value with a description
+
+## [4.1.4] - 2023-01-24
+
+### Fixes
+
+- *(help)* Respect `disable_colored_help` when using `arg_required_else_help`
+
+### Performance
+
+- Speed up compiling `arg!` macro
+
+## [4.1.3] - 2023-01-23
+
+### Fixes
+
+- *(error)* Improve suggested flag/value/subcommand when two share a long preifx
+- *(error)* When suggesting one of several subcommands, use the plural `subcommands`, rather than `subcommand`
+
+## [4.1.2] - 2023-01-23
+
+### Fixes
+
+- In documentation, refer to `get_flag`, rather than `get_one::<bool>`
+
+## [4.1.1] - 2023-01-14
+
+### Fixes
+
+- *(error)* Small softening attempt for "unexpected argument" error
+
+## [4.1.0] - 2023-01-13
+
+### Compatibility
+
+MSRV changed to 1.64.0
+
+For apps with custom `--help` and `--version` flags:
+- Descriptions for `--help` and `--version` changed
+
+When apps have errors imitating clap's error style:
+- Error message style was changed, including
+  - Moving away from "did you mean" to tips
+  - Leading letter is lower case
+  - "For more" added some punctuation
+
+### Features
+
+- `ArgMatches::get_occurrences` support for argument values to be grouped by their occurrence
+
+### Fixes
+
+- *(derive)* Allow `upgrade_from` when arguments / subcommands are explicitly marked as required
+- *(help)* Try be more clearer and succinct with `--help` and `--version` (also helps with overflow)
+- *(error)* Try to be more clearer and succinct with error messages
+- *(error)* Officially adopt [an error style guide](https://rustc-dev-guide.rust-lang.org/diagnostics.html#suggestion-style-guide)
 
 ## [4.0.32] - 2022-12-22
 
@@ -4059,7 +4695,102 @@ Minimum version of Rust is now v1.13.0 (Stable)
 * **arg**  allow lifetimes other than 'static in arguments ([9e8c1fb9](https://github.com/clap-rs/clap/commit/9e8c1fb9406f8448873ca58bab07fe905f1551e5))
 
 <!-- next-url -->
-[Unreleased]: https://github.com/clap-rs/clap/compare/v4.0.32...HEAD
+[Unreleased]: https://github.com/clap-rs/clap/compare/v4.5.27...HEAD
+[4.5.27]: https://github.com/clap-rs/clap/compare/v4.5.26...v4.5.27
+[4.5.26]: https://github.com/clap-rs/clap/compare/v4.5.25...v4.5.26
+[4.5.25]: https://github.com/clap-rs/clap/compare/v4.5.24...v4.5.25
+[4.5.24]: https://github.com/clap-rs/clap/compare/v4.5.23...v4.5.24
+[4.5.23]: https://github.com/clap-rs/clap/compare/v4.5.22...v4.5.23
+[4.5.22]: https://github.com/clap-rs/clap/compare/v4.5.21...v4.5.22
+[4.5.21]: https://github.com/clap-rs/clap/compare/v4.5.20...v4.5.21
+[4.5.20]: https://github.com/clap-rs/clap/compare/v4.5.19...v4.5.20
+[4.5.19]: https://github.com/clap-rs/clap/compare/v4.5.18...v4.5.19
+[4.5.18]: https://github.com/clap-rs/clap/compare/v4.5.17...v4.5.18
+[4.5.17]: https://github.com/clap-rs/clap/compare/v4.5.16...v4.5.17
+[4.5.16]: https://github.com/clap-rs/clap/compare/v4.5.15...v4.5.16
+[4.5.15]: https://github.com/clap-rs/clap/compare/v4.5.14...v4.5.15
+[4.5.14]: https://github.com/clap-rs/clap/compare/v4.5.13...v4.5.14
+[4.5.13]: https://github.com/clap-rs/clap/compare/v4.5.12...v4.5.13
+[4.5.12]: https://github.com/clap-rs/clap/compare/v4.5.11...v4.5.12
+[4.5.11]: https://github.com/clap-rs/clap/compare/v4.5.10...v4.5.11
+[4.5.10]: https://github.com/clap-rs/clap/compare/v4.5.9...v4.5.10
+[4.5.9]: https://github.com/clap-rs/clap/compare/v4.5.8...v4.5.9
+[4.5.8]: https://github.com/clap-rs/clap/compare/v4.5.7...v4.5.8
+[4.5.7]: https://github.com/clap-rs/clap/compare/v4.5.6...v4.5.7
+[4.5.6]: https://github.com/clap-rs/clap/compare/v4.5.5...v4.5.6
+[4.5.5]: https://github.com/clap-rs/clap/compare/v4.5.4...v4.5.5
+[4.5.4]: https://github.com/clap-rs/clap/compare/v4.5.3...v4.5.4
+[4.5.3]: https://github.com/clap-rs/clap/compare/v4.5.2...v4.5.3
+[4.5.2]: https://github.com/clap-rs/clap/compare/v4.5.1...v4.5.2
+[4.5.1]: https://github.com/clap-rs/clap/compare/v4.5.0...v4.5.1
+[4.5.0]: https://github.com/clap-rs/clap/compare/v4.4.18...v4.5.0
+[4.4.18]: https://github.com/clap-rs/clap/compare/v4.4.17...v4.4.18
+[4.4.17]: https://github.com/clap-rs/clap/compare/v4.4.16...v4.4.17
+[4.4.16]: https://github.com/clap-rs/clap/compare/v4.4.15...v4.4.16
+[4.4.15]: https://github.com/clap-rs/clap/compare/v4.4.14...v4.4.15
+[4.4.14]: https://github.com/clap-rs/clap/compare/v4.4.13...v4.4.14
+[4.4.13]: https://github.com/clap-rs/clap/compare/v4.4.12...v4.4.13
+[4.4.12]: https://github.com/clap-rs/clap/compare/v4.4.11...v4.4.12
+[4.4.11]: https://github.com/clap-rs/clap/compare/v4.4.10...v4.4.11
+[4.4.10]: https://github.com/clap-rs/clap/compare/v4.4.9...v4.4.10
+[4.4.9]: https://github.com/clap-rs/clap/compare/v4.4.8...v4.4.9
+[4.4.8]: https://github.com/clap-rs/clap/compare/v4.4.7...v4.4.8
+[4.4.7]: https://github.com/clap-rs/clap/compare/v4.4.6...v4.4.7
+[4.4.6]: https://github.com/clap-rs/clap/compare/v4.4.5...v4.4.6
+[4.4.5]: https://github.com/clap-rs/clap/compare/v4.4.4...v4.4.5
+[4.4.4]: https://github.com/clap-rs/clap/compare/v4.4.3...v4.4.4
+[4.4.3]: https://github.com/clap-rs/clap/compare/v4.4.2...v4.4.3
+[4.4.2]: https://github.com/clap-rs/clap/compare/v4.4.1...v4.4.2
+[4.4.1]: https://github.com/clap-rs/clap/compare/v4.4.0...v4.4.1
+[4.4.0]: https://github.com/clap-rs/clap/compare/v4.3.24...v4.4.0
+[4.3.24]: https://github.com/clap-rs/clap/compare/v4.3.23...v4.3.24
+[4.3.23]: https://github.com/clap-rs/clap/compare/v4.3.22...v4.3.23
+[4.3.22]: https://github.com/clap-rs/clap/compare/v4.3.21...v4.3.22
+[4.3.21]: https://github.com/clap-rs/clap/compare/v4.3.20...v4.3.21
+[4.3.20]: https://github.com/clap-rs/clap/compare/v4.3.19...v4.3.20
+[4.3.19]: https://github.com/clap-rs/clap/compare/v4.3.18...v4.3.19
+[4.3.18]: https://github.com/clap-rs/clap/compare/v4.3.17...v4.3.18
+[4.3.17]: https://github.com/clap-rs/clap/compare/v4.3.16...v4.3.17
+[4.3.16]: https://github.com/clap-rs/clap/compare/v4.3.15...v4.3.16
+[4.3.15]: https://github.com/clap-rs/clap/compare/v4.3.14...v4.3.15
+[4.3.14]: https://github.com/clap-rs/clap/compare/v4.3.13...v4.3.14
+[4.3.13]: https://github.com/clap-rs/clap/compare/v4.3.12...v4.3.13
+[4.3.12]: https://github.com/clap-rs/clap/compare/v4.3.11...v4.3.12
+[4.3.11]: https://github.com/clap-rs/clap/compare/v4.3.10...v4.3.11
+[4.3.10]: https://github.com/clap-rs/clap/compare/v4.3.9...v4.3.10
+[4.3.9]: https://github.com/clap-rs/clap/compare/v4.3.8...v4.3.9
+[4.3.8]: https://github.com/clap-rs/clap/compare/v4.3.7...v4.3.8
+[4.3.7]: https://github.com/clap-rs/clap/compare/v4.3.6...v4.3.7
+[4.3.6]: https://github.com/clap-rs/clap/compare/v4.3.5...v4.3.6
+[4.3.5]: https://github.com/clap-rs/clap/compare/v4.3.4...v4.3.5
+[4.3.4]: https://github.com/clap-rs/clap/compare/v4.3.3...v4.3.4
+[4.3.3]: https://github.com/clap-rs/clap/compare/v4.3.2...v4.3.3
+[4.3.2]: https://github.com/clap-rs/clap/compare/v4.3.1...v4.3.2
+[4.3.1]: https://github.com/clap-rs/clap/compare/v4.3.0...v4.3.1
+[4.3.0]: https://github.com/clap-rs/clap/compare/v4.2.7...v4.3.0
+[4.2.7]: https://github.com/clap-rs/clap/compare/v4.2.6...v4.2.7
+[4.2.6]: https://github.com/clap-rs/clap/compare/v4.2.5...v4.2.6
+[4.2.5]: https://github.com/clap-rs/clap/compare/v4.2.4...v4.2.5
+[4.2.4]: https://github.com/clap-rs/clap/compare/v4.2.3...v4.2.4
+[4.2.3]: https://github.com/clap-rs/clap/compare/v4.2.2...v4.2.3
+[4.2.2]: https://github.com/clap-rs/clap/compare/v4.2.1...v4.2.2
+[4.2.1]: https://github.com/clap-rs/clap/compare/v4.2.0...v4.2.1
+[4.2.0]: https://github.com/clap-rs/clap/compare/v4.1.14...v4.2.0
+[4.1.14]: https://github.com/clap-rs/clap/compare/v4.1.13...v4.1.14
+[4.1.13]: https://github.com/clap-rs/clap/compare/v4.1.12...v4.1.13
+[4.1.12]: https://github.com/clap-rs/clap/compare/v4.1.11...v4.1.12
+[4.1.11]: https://github.com/clap-rs/clap/compare/v4.1.10...v4.1.11
+[4.1.10]: https://github.com/clap-rs/clap/compare/v4.1.9...v4.1.10
+[4.1.9]: https://github.com/clap-rs/clap/compare/v4.1.8...v4.1.9
+[4.1.8]: https://github.com/clap-rs/clap/compare/v4.1.7...v4.1.8
+[4.1.7]: https://github.com/clap-rs/clap/compare/v4.1.6...v4.1.7
+[4.1.6]: https://github.com/clap-rs/clap/compare/v4.1.5...v4.1.6
+[4.1.5]: https://github.com/clap-rs/clap/compare/v4.1.4...v4.1.5
+[4.1.4]: https://github.com/clap-rs/clap/compare/v4.1.3...v4.1.4
+[4.1.3]: https://github.com/clap-rs/clap/compare/v4.1.2...v4.1.3
+[4.1.2]: https://github.com/clap-rs/clap/compare/v4.1.1...v4.1.2
+[4.1.1]: https://github.com/clap-rs/clap/compare/v4.1.0...v4.1.1
+[4.1.0]: https://github.com/clap-rs/clap/compare/v4.0.32...v4.1.0
 [4.0.32]: https://github.com/clap-rs/clap/compare/v4.0.31...v4.0.32
 [4.0.31]: https://github.com/clap-rs/clap/compare/v4.0.30...v4.0.31
 [4.0.30]: https://github.com/clap-rs/clap/compare/v4.0.29...v4.0.30

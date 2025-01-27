@@ -1,6 +1,6 @@
 use super::utils;
 
-use clap::{arg, Arg, ArgAction, Command};
+use clap::{arg, builder::PossibleValue, Arg, ArgAction, Command};
 
 static HIDDEN_ARGS: &str = "\
 tests stuff
@@ -10,8 +10,8 @@ Usage: test [OPTIONS]
 Options:
   -F, --flag2         some other flag
       --option <opt>  some option
-  -h, --help          Print help information
-  -V, --version       Print version information
+  -h, --help          Print help
+  -V, --version       Print version
 ";
 
 #[test]
@@ -36,8 +36,8 @@ Usage: test [OPTIONS]
 
 Options:
   -v, --visible  This text should be visible
-  -h, --help     Print help information (use `--help` for more detail)
-  -V, --version  Print version information
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
 ";
 
 /// Ensure hide with short option
@@ -80,10 +80,10 @@ Options:
           This text should be visible
 
   -h, --help
-          Print help information (use `-h` for a summary)
+          Print help (see a summary with '-h')
 
   -V, --version
-          Print version information
+          Print version
 ";
 
     let cmd = Command::new("test")
@@ -117,10 +117,10 @@ Options:
           This text should be visible
 
   -h, --help
-          Print help information (use `-h` for a summary)
+          Print help (see a summary with '-h')
 
   -V, --version
-          Print version information
+          Print version
 ";
 
 #[test]
@@ -154,8 +154,8 @@ Usage: test [OPTIONS]
 Options:
   -c, --config   Some help text describing the --config arg
   -v, --visible  This text should be visible
-  -h, --help     Print help information (use `--help` for more detail)
-  -V, --version  Print version information
+  -h, --help     Print help (see more with '--help')
+  -V, --version  Print version
 ";
 
 #[test]
@@ -188,8 +188,8 @@ Arguments:
   [another]  another pos
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
 
 #[test]
@@ -206,8 +206,8 @@ static HIDDEN_SUBCMDS: &str = "\
 Usage: test
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
 
 #[test]
@@ -277,4 +277,28 @@ fn hide_subcmds_only() {
         .subcommand(Command::new("sub").hide(true));
 
     utils::assert_output(cmd, "test --help", HIDDEN_SUBCMDS_ONLY, false);
+}
+
+#[test]
+fn hidden_arg_with_possible_value_with_help() {
+    // Normally the presence of a possible value with a help text triggers a
+    // change of the --help help text by appending `(see more with '--help')`
+    // or `(see a summary with '-h')`. When the argument is completely hidden
+    // we however do not want it to trigger that change.
+    static POS_VALS_HELP: &str = "\
+Usage: ctest
+
+Options:
+  -h, --help  Print help
+";
+    let app = Command::new("ctest").arg(
+        Arg::new("pos")
+            .hide(true)
+            .value_parser([
+                PossibleValue::new("fast"),
+                PossibleValue::new("slow").help("not as fast"),
+            ])
+            .action(ArgAction::Set),
+    );
+    utils::assert_output(app, "ctest --help", POS_VALS_HELP, false);
 }

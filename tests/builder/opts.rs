@@ -21,11 +21,11 @@ fn require_equals_fail() {
 #[test]
 #[cfg(feature = "error-context")]
 fn require_equals_fail_message() {
-    static NO_EQUALS: &str = "error: Equal sign is needed when assigning values to '--config=<cfg>'
+    static NO_EQUALS: &str = "error: equal sign is needed when assigning values to '--config=<cfg>'
 
 Usage: prog [OPTIONS]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
     let cmd = Command::new("prog").arg(
         Arg::new("cfg")
@@ -64,7 +64,7 @@ fn double_hyphen_as_value() {
                 .long("config"),
         )
         .try_get_matches_from(vec!["prog", "--config", "--"]);
-    assert!(res.is_ok(), "{:?}", res);
+    assert!(res.is_ok(), "{res:?}");
     assert_eq!(
         res.unwrap().get_one::<String>("cfg").map(|v| v.as_str()),
         Some("--")
@@ -428,7 +428,7 @@ fn leading_hyphen_with_only_pos_follows() {
         )
         .arg(arg!([arg] "some arg"))
         .try_get_matches_from(vec!["", "-o", "-2", "--", "val"]);
-    assert!(r.is_ok(), "{:?}", r);
+    assert!(r.is_ok(), "{r:?}");
     let m = r.unwrap();
     assert!(m.contains_id("o"));
     assert_eq!(
@@ -446,13 +446,13 @@ fn leading_hyphen_with_only_pos_follows() {
 #[cfg(feature = "error-context")]
 fn did_you_mean() {
     static DYM: &str = "\
-error: Found argument '--optio' which wasn't expected, or isn't valid in this context
+error: unexpected argument '--optio' found
 
-  Did you mean '--option'?
+  tip: a similar argument exists: '--option'
 
 Usage: clap-test --option <opt>... [positional] [positional2] [positional3]...
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     utils::assert_output(utils::complex_app(), "clap-test --optio=foo", DYM, true);
@@ -544,13 +544,13 @@ fn issue_1105_empty_value_short_explicit_no_space() {
 #[cfg(feature = "error-context")]
 fn issue_1073_suboptimal_flag_suggestion() {
     static DYM_ISSUE_1073: &str = "\
-error: Found argument '--files-without-matches' which wasn't expected, or isn't valid in this context
+error: unexpected argument '--files-without-matches' found
 
-  Did you mean '--files-without-match'?
+  tip: a similar argument exists: '--files-without-match'
 
 Usage: ripgrep-616 --files-without-match
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     let cmd = Command::new("ripgrep-616")
@@ -626,7 +626,7 @@ fn issue_2022_get_flags_misuse() {
         .next_help_heading(Some("test"))
         .arg(Arg::new("a").long("a").default_value("32"));
     let matches = cmd.try_get_matches_from([""]).unwrap();
-    assert!(matches.get_one::<String>("a").map(|v| v.as_str()).is_some())
+    assert!(matches.get_one::<String>("a").map(|v| v.as_str()).is_some());
 }
 
 #[test]
@@ -659,7 +659,7 @@ fn issue_2279() {
 }
 
 #[test]
-fn infer_long_arg() {
+fn infer_long_arg_pass() {
     let cmd = Command::new("test")
         .infer_long_args(true)
         .arg(
@@ -715,4 +715,58 @@ fn infer_long_arg() {
 
     let matches = cmd.clone().try_get_matches_from(["test", "--a"]).unwrap();
     assert!(*matches.get_one::<bool>("arg").expect("defaulted by clap"));
+}
+
+#[test]
+fn infer_long_arg_pass_conflicts_exact_match() {
+    let cmd = Command::new("test")
+        .infer_long_args(true)
+        .arg(Arg::new("arg").long("arg").action(ArgAction::SetTrue))
+        .arg(Arg::new("arg2").long("arg2").action(ArgAction::SetTrue));
+
+    let matches = cmd.clone().try_get_matches_from(["test", "--arg"]).unwrap();
+    assert!(*matches.get_one::<bool>("arg").expect("defaulted by clap"));
+
+    let matches = cmd
+        .clone()
+        .try_get_matches_from(["test", "--arg2"])
+        .unwrap();
+    assert!(*matches.get_one::<bool>("arg2").expect("defaulted by clap"));
+}
+
+#[test]
+fn infer_long_arg_pass_conflicting_aliases() {
+    let cmd = Command::new("test").infer_long_args(true).arg(
+        Arg::new("abc-123")
+            .long("abc-123")
+            .aliases(["a", "abc-xyz"])
+            .action(ArgAction::SetTrue),
+    );
+
+    let matches = cmd.clone().try_get_matches_from(["test", "--ab"]).unwrap();
+    assert!(*matches
+        .get_one::<bool>("abc-123")
+        .expect("defaulted by clap"));
+}
+
+#[test]
+fn infer_long_arg_fail_conflicts() {
+    let cmd = Command::new("test")
+        .infer_long_args(true)
+        .arg(
+            Arg::new("abc-123")
+                .long("abc-123")
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("abc-xyz")
+                .long("abc-xyz")
+                .action(ArgAction::SetTrue),
+        );
+
+    let error = cmd
+        .clone()
+        .try_get_matches_from(["test", "--abc"])
+        .unwrap_err();
+    assert_eq!(error.kind(), ErrorKind::UnknownArgument);
 }

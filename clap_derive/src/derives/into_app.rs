@@ -18,14 +18,24 @@ use syn::{Generics, Ident};
 
 use crate::item::Item;
 
-pub fn gen_for_struct(item: &Item, item_name: &Ident, generics: &Generics) -> TokenStream {
+pub(crate) fn gen_for_struct(
+    item: &Item,
+    item_name: &Ident,
+    generics: &Generics,
+) -> Result<TokenStream, syn::Error> {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let name = item.cased_name();
     let app_var = Ident::new("__clap_app", Span::call_site());
 
     let tokens = quote! {
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -36,8 +46,10 @@ pub fn gen_for_struct(item: &Item, item_name: &Ident, generics: &Generics) -> To
             clippy::nursery,
             clippy::cargo,
             clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
+            clippy::redundant_locals,
         )]
-        #[deny(clippy::correctness)]
+        #[automatically_derived]
         impl #impl_generics clap::CommandFactory for #item_name #ty_generics #where_clause {
             fn command<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name);
@@ -51,17 +63,27 @@ pub fn gen_for_struct(item: &Item, item_name: &Ident, generics: &Generics) -> To
         }
     };
 
-    tokens
+    Ok(tokens)
 }
 
-pub fn gen_for_enum(item: &Item, item_name: &Ident, generics: &Generics) -> TokenStream {
+pub(crate) fn gen_for_enum(
+    item: &Item,
+    item_name: &Ident,
+    generics: &Generics,
+) -> Result<TokenStream, syn::Error> {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let name = item.cased_name();
     let app_var = Ident::new("__clap_app", Span::call_site());
 
-    quote! {
-        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
+    Ok(quote! {
+        #[allow(
+            dead_code,
+            unreachable_code,
+            unused_variables,
+            unused_braces,
+            unused_qualifications,
+        )]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -72,8 +94,10 @@ pub fn gen_for_enum(item: &Item, item_name: &Ident, generics: &Generics) -> Toke
             clippy::nursery,
             clippy::cargo,
             clippy::suspicious_else_formatting,
+            clippy::almost_swapped,
+            clippy::redundant_locals,
         )]
-        #[deny(clippy::correctness)]
+        #[automatically_derived]
         impl #impl_generics clap::CommandFactory for #item_name #ty_generics #where_clause {
             fn command<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name)
@@ -85,7 +109,9 @@ pub fn gen_for_enum(item: &Item, item_name: &Ident, generics: &Generics) -> Toke
             fn command_for_update<'b>() -> clap::Command {
                 let #app_var = clap::Command::new(#name);
                 <Self as clap::Subcommand>::augment_subcommands_for_update(#app_var)
+                    .subcommand_required(false)
+                    .arg_required_else_help(false)
             }
         }
-    }
+    })
 }

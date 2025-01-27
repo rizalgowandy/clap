@@ -1,8 +1,10 @@
-#![doc(html_logo_url = "https://raw.githubusercontent.com/clap-rs/clap/master/assets/clap.png")]
 #![doc = include_str!("../README.md")]
-#![warn(missing_docs, trivial_casts, unused_allocation, trivial_numeric_casts)]
+#![doc(html_logo_url = "https://raw.githubusercontent.com/clap-rs/clap/master/assets/clap.png")]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![forbid(unsafe_code)]
-#![deny(missing_docs)]
+#![warn(missing_docs)]
+#![warn(clippy::print_stderr)]
+#![warn(clippy::print_stdout)]
 
 mod render;
 
@@ -27,7 +29,10 @@ impl Man {
     /// Create a new manual page.
     pub fn new(mut cmd: clap::Command) -> Self {
         cmd.build();
-        let title = cmd.get_name().to_owned();
+        let title = cmd
+            .get_display_name()
+            .unwrap_or_else(|| cmd.get_name())
+            .to_owned();
         let section = "1".to_owned();
         let date = "".to_owned();
         let source = format!(
@@ -90,6 +95,51 @@ impl Man {
         self.manual = manual.into();
         self
     }
+}
+
+/// Handle [`Man`] in relation to files
+impl Man {
+    /// Generate the filename of the manual page
+    #[must_use]
+    pub fn get_filename(&self) -> String {
+        format!(
+            "{}.{}",
+            self.cmd
+                .get_display_name()
+                .unwrap_or_else(|| self.cmd.get_name()),
+            self.section
+        )
+    }
+
+    /// [Renders](Man::render) the manual page and writes it to a file
+    pub fn generate_to(
+        &self,
+        out_dir: impl AsRef<std::path::Path>,
+    ) -> Result<std::path::PathBuf, std::io::Error> {
+        let filepath = out_dir.as_ref().join(self.get_filename());
+        let mut file = std::fs::File::create(&filepath)?;
+        self.render(&mut file)?;
+        file.flush()?;
+        Ok(filepath)
+    }
+}
+
+/// Generate manual page files for the command with all subcommands
+pub fn generate_to(
+    cmd: clap::Command,
+    out_dir: impl AsRef<std::path::Path>,
+) -> Result<(), std::io::Error> {
+    fn generate(cmd: clap::Command, out_dir: &std::path::Path) -> Result<(), std::io::Error> {
+        for cmd in cmd.get_subcommands().filter(|s| !s.is_hide_set()).cloned() {
+            generate(cmd, out_dir)?;
+        }
+        Man::new(cmd).generate_to(out_dir)?;
+        Ok(())
+    }
+
+    let mut cmd = cmd.disable_help_subcommand(true);
+    cmd.build();
+    generate(cmd, out_dir.as_ref())
 }
 
 /// Generate ROFF output
@@ -194,8 +244,39 @@ impl Man {
     }
 
     fn _render_options_section(&self, roff: &mut Roff) {
-        roff.control("SH", ["OPTIONS"]);
-        render::options(roff, &self.cmd);
+        let help_headings = self
+            .cmd
+            .get_arguments()
+            .filter(|a| !a.is_hide_set())
+            .filter_map(|arg| arg.get_help_heading())
+            .fold(vec![], |mut acc, header| {
+                if !acc.contains(&header) {
+                    acc.push(header);
+                }
+
+                acc
+            });
+
+        let (args, mut args_with_heading) =
+            self.cmd
+                .get_arguments()
+                .filter(|a| !a.is_hide_set())
+                .partition::<Vec<_>, _>(|a| a.get_help_heading().is_none());
+
+        if !args.is_empty() {
+            roff.control("SH", ["OPTIONS"]);
+            render::options(roff, &args);
+        }
+
+        for heading in help_headings {
+            let args;
+            (args, args_with_heading) = args_with_heading
+                .into_iter()
+                .partition(|&a| a.get_help_heading() == Some(heading));
+
+            roff.control("SH", [heading.to_uppercase().as_str()]);
+            render::options(roff, &args);
+        }
     }
 
     /// Render the SUBCOMMANDS section into the writer.

@@ -1,4 +1,6 @@
-complete -c my-app -l choice -r -f -a "{bash	,fish	,zsh	}"
+complete -c my-app -l choice -r -f -a "bash\t''
+fish\t''
+zsh\t''"
 complete -c my-app -l unknown -r
 complete -c my-app -l other -r -f
 complete -c my-app -s p -l path -r -F
@@ -11,4 +13,4 @@ complete -c my-app -s u -l user -r -f -a "(__fish_complete_users)"
 complete -c my-app -s H -l host -r -f -a "(__fish_print_hostnames)"
 complete -c my-app -l url -r -f
 complete -c my-app -l email -r -f
-complete -c my-app -s h -l help -d 'Print help information'
+complete -c my-app -s h -l help -d 'Print help'

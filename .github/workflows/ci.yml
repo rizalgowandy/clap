@@ -1,23 +1,35 @@
 name: CI
+
+permissions:
+  contents: read
+
 on:
   pull_request:
   push:
-    branches: ["*master"]
-  schedule:
-  - cron: '3 3 3 * *'
-permissions:
-  contents: read
+    branches:
+      - "*master"
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+  CLICOLOR: 1
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   ci:
     permissions:
       contents: none
     name: CI
-    needs: [test, check, docs, rustfmt, clippy]
+    needs: [test, check, lockfile, docs, rustfmt, clippy, minimal-versions, cffconvert]
     runs-on: ubuntu-latest
+    if: "always()"
     steps:
-      - name: Done
-        run: exit 0
+      - name: Failed
+        run: exit 1
+        if: "contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')"
   test:
     name: Test
     strategy:
@@ -25,7 +37,7 @@ jobs:
         build: [linux, windows, mac, minimal, default, next]
         include:
         - build: linux
-          os: ubuntu-latest
+          os: buildjet-8vcpu-ubuntu-2204
           rust: "stable"
           features: "full"
         - build: windows
@@ -37,28 +49,26 @@ jobs:
           rust: "stable"
           features: "full"
         - build: minimal
-          os: ubuntu-latest
+          os: buildjet-8vcpu-ubuntu-2204
           rust: "stable"
           features: "minimal"
         - build: default
-          os: ubuntu-latest
+          os: buildjet-8vcpu-ubuntu-2204
           rust: "stable"
           features: "default"
         - build: next
-          os: ubuntu-latest
+          os: buildjet-8vcpu-ubuntu-2204
           rust: "stable"
           features: "next"
     continue-on-error: ${{ matrix.rust != 'stable' }}
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ matrix.rust }}
-        profile: minimal
-        override: true
     - uses: Swatinem/rust-cache@v2
     - name: Build
       run: make build-${{matrix.features}}
@@ -69,6 +79,37 @@ jobs:
     - name: Test (ultra-minimal)
       if: matrix.build == 'minimal'
       run: make test-minimal ARGS='--manifest-path Cargo.toml'
+    - name: Test dynamic completions
+      run: cargo test -p clap_complete -F unstable-dynamic
+  shell-integration:
+    name: Shell Integration
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+    - uses: Swatinem/rust-cache@v2
+    - name: Install shells
+      if: runner.os == 'Linux'
+      run: sudo apt-get install -y elvish fish zsh
+    - name: clap_complete
+      run: cargo test -p clap_complete -F unstable-dynamic -F unstable-shell-tests
+  shell-integration-nu:
+    name: Nushell Integration
+    runs-on: buildjet-8vcpu-ubuntu-2204
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+    - uses: Swatinem/rust-cache@v2
+    - name: clap_complete_nu
+      run: cargo test -p clap_complete_nushell -F unstable-shell-tests
   check:
     name: Check
     runs-on: ubuntu-latest
@@ -78,7 +119,7 @@ jobs:
         build: [msrv, wasm, wasm-wasi, debug, release]
         include:
           - build: msrv
-            rust: 1.60.0  # MSRV
+            rust: "1.74"  # MSRV
             target: x86_64-unknown-linux-gnu
             features: full
           - build: wasm
@@ -87,7 +128,7 @@ jobs:
             features: wasm
           - build: wasm-wasi
             rust: stable
-            target: wasm32-wasi
+            target: wasm32-wasip1
             features: wasm
           - build: debug
             rust: stable
@@ -99,16 +140,17 @@ jobs:
             features: release
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
-          target: ${{ matrix.target }}
-          override: true
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
       - name: Check
         run: make check-${{ matrix.features }}
+        env:
+          TOOLCHAIN_TARGET: ${{ matrix.target }}
   ui:
     name: UI Tests
     runs-on: ubuntu-latest
@@ -118,28 +160,54 @@ jobs:
         features: [default, next]
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: 1.60.0  # MSRV
-        profile: minimal
-        override: true
+        toolchain: "1.84"  # STABLE
     - uses: Swatinem/rust-cache@v2
     - name: UI Tests
       run: make test-ui-${{ matrix.features }}
+  minimal-versions:
+    name: Minimal versions
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Install stable Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+    - name: Install nightly Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: nightly
+    - name: Downgrade dependencies to minimal versions
+      run: cargo +nightly generate-lockfile -Z minimal-versions
+    - name: Compile with minimal versions
+      run: cargo +stable check --workspace --all-features --locked --exclude clap_complete_nushell --exclude clap_bench
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: stable
+    - uses: Swatinem/rust-cache@v2
+    - name: "Is lockfile updated?"
+      run: cargo update --workspace --locked
   docs:
     name: Docs
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: 1.60.0  # MSRV
-        profile: minimal
-        override: true
+        toolchain: "1.84"  # STABLE
     - uses: Swatinem/rust-cache@v2
     - name: Check documentation
       env:
@@ -150,15 +218,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        # Not MSRV because its harder to jump between versions and people are
-        # more likely to have stable
-        toolchain: stable
-        profile: minimal
-        override: true
+        toolchain: "1.84"  # STABLE
         components: rustfmt
     - uses: Swatinem/rust-cache@v2
     - name: Check formatting
@@ -168,13 +232,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Install Rust
-      uses: actions-rs/toolchain@v1
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: 1.60.0  # MSRV
-        profile: minimal
-        override: true
+        toolchain: "1.84"  # STABLE
         components: clippy
     - uses: Swatinem/rust-cache@v2
     - name: Lint (ultra-minimal)
@@ -185,3 +247,15 @@ jobs:
       run: make clippy-full
     - name: Lint (release)
       run: make clippy-release
+  cffconvert:
+    name: cffconvert
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: CFF validation
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: --validate

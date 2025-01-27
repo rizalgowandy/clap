@@ -1,19 +1,21 @@
 use clap::{arg, error::ErrorKind, Arg, ArgAction, Command};
 
 use super::utils;
+use snapbox::assert_data_eq;
+use snapbox::str;
 
 #[test]
 fn subcommand() {
     let m = Command::new("test")
-        .subcommand(
-            Command::new("some").arg(
+        .subcommand(Command::new("some").defer(|cmd| {
+            cmd.arg(
                 Arg::new("test")
                     .short('t')
                     .long("test")
                     .action(ArgAction::Set)
                     .help("testing testing"),
-            ),
-        )
+            )
+        }))
         .arg(Arg::new("other").long("other"))
         .try_get_matches_from(vec!["myprog", "some", "--test", "testing"])
         .unwrap();
@@ -30,15 +32,15 @@ fn subcommand() {
 #[test]
 fn subcommand_none_given() {
     let m = Command::new("test")
-        .subcommand(
-            Command::new("some").arg(
+        .subcommand(Command::new("some").defer(|cmd| {
+            cmd.arg(
                 Arg::new("test")
                     .short('t')
                     .long("test")
                     .action(ArgAction::Set)
                     .help("testing testing"),
-            ),
-        )
+            )
+        }))
         .arg(Arg::new("other").long("other"))
         .try_get_matches_from(vec![""])
         .unwrap();
@@ -50,14 +52,16 @@ fn subcommand_none_given() {
 fn subcommand_multiple() {
     let m = Command::new("test")
         .subcommands(vec![
-            Command::new("some").arg(
-                Arg::new("test")
-                    .short('t')
-                    .long("test")
-                    .action(ArgAction::Set)
-                    .help("testing testing"),
-            ),
-            Command::new("add").arg(Arg::new("roster").short('r')),
+            Command::new("some").defer(|cmd| {
+                cmd.arg(
+                    Arg::new("test")
+                        .short('t')
+                        .long("test")
+                        .action(ArgAction::Set)
+                        .help("testing testing"),
+                )
+            }),
+            Command::new("add").defer(|cmd| cmd.arg(Arg::new("roster").short('r'))),
         ])
         .arg(Arg::new("other").long("other"))
         .try_get_matches_from(vec!["myprog", "some", "--test", "testing"])
@@ -98,15 +102,13 @@ fn multiple_aliases() {
 fn subcmd_did_you_mean_output() {
     #[cfg(feature = "suggestions")]
     static DYM_SUBCMD: &str = "\
-error: The subcommand 'subcm' wasn't recognized
+error: unrecognized subcommand 'subcm'
 
-  Did you mean 'subcmd'?
-
-  If you believe you received this message in error, try re-running with 'dym -- subcm'
+  tip: a similar subcommand exists: 'subcmd'
 
 Usage: dym [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     let cmd = Command::new("dym").subcommand(Command::new("subcmd"));
@@ -119,15 +121,13 @@ For more information try '--help'
 fn subcmd_did_you_mean_output_ambiguous() {
     #[cfg(feature = "suggestions")]
     static DYM_SUBCMD_AMBIGUOUS: &str = "\
-error: The subcommand 'te' wasn't recognized
+error: unrecognized subcommand 'te'
 
-  Did you mean 'test', 'temp'?
-
-  If you believe you received this message in error, try re-running with 'dym -- te'
+  tip: some similar subcommands exist: 'test', 'temp'
 
 Usage: dym [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     let cmd = Command::new("dym")
@@ -141,17 +141,18 @@ For more information try '--help'
 #[cfg(feature = "error-context")]
 fn subcmd_did_you_mean_output_arg() {
     static EXPECTED: &str = "\
-error: Found argument '--subcmarg' which wasn't expected, or isn't valid in this context
+error: unexpected argument '--subcmarg' found
 
-  Did you mean to put '--subcmdarg' after the subcommand 'subcmd'?
+  tip: 'subcmd --subcmdarg' exists
 
 Usage: dym [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
-    let cmd = Command::new("dym")
-        .subcommand(Command::new("subcmd").arg(arg!(-s --subcmdarg <subcmdarg> "tests")));
+    let cmd = Command::new("dym").subcommand(
+        Command::new("subcmd").defer(|cmd| cmd.arg(arg!(-s --subcmdarg <subcmdarg> "tests"))),
+    );
 
     utils::assert_output(cmd, "dym --subcmarg subcmd", EXPECTED, true);
 }
@@ -161,15 +162,16 @@ For more information try '--help'
 #[cfg(feature = "error-context")]
 fn subcmd_did_you_mean_output_arg_false_positives() {
     static EXPECTED: &str = "\
-error: Found argument '--subcmarg' which wasn't expected, or isn't valid in this context
+error: unexpected argument '--subcmarg' found
 
 Usage: dym [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
-    let cmd = Command::new("dym")
-        .subcommand(Command::new("subcmd").arg(arg!(-s --subcmdarg <subcmdarg> "tests")));
+    let cmd = Command::new("dym").subcommand(
+        Command::new("subcmd").defer(|cmd| cmd.arg(arg!(-s --subcmdarg <subcmdarg> "tests"))),
+    );
 
     utils::assert_output(cmd, "dym --subcmarg foo", EXPECTED, true);
 }
@@ -193,8 +195,8 @@ Commands:
   help  Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
 
     let cmd = Command::new("clap-test").version("2.6").subcommand(
@@ -217,32 +219,14 @@ Commands:
   help  Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
 
     let cmd = Command::new("clap-test")
         .version("2.6")
         .subcommand(Command::new("test").about("Some help").alias("invisible"));
     utils::assert_output(cmd, "clap-test --help", INVISIBLE_ALIAS_HELP, false);
-}
-
-#[test]
-#[cfg(feature = "unstable-replace")]
-fn replace() {
-    let m = Command::new("prog")
-        .subcommand(
-            Command::new("module").subcommand(Command::new("install").about("Install module")),
-        )
-        .replace("install", ["module", "install"])
-        .try_get_matches_from(vec!["prog", "install"])
-        .unwrap();
-
-    assert_eq!(m.subcommand_name(), Some("module"));
-    assert_eq!(
-        m.subcommand_matches("module").unwrap().subcommand_name(),
-        Some("install")
-    );
 }
 
 #[test]
@@ -353,13 +337,13 @@ fn subcommand_placeholder_test() {
 #[cfg(feature = "error-context")]
 fn subcommand_used_after_double_dash() {
     static SUBCMD_AFTER_DOUBLE_DASH: &str = "\
-error: Found argument 'subcmd' which wasn't expected, or isn't valid in this context
+error: unexpected argument 'subcmd' found
 
-  If you tried to supply 'subcmd' as a subcommand, remove the '--' before it.
+  tip: subcommand 'subcmd' exists; to use it, remove the '--' before it
 
 Usage: cmd [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ";
 
     let cmd = Command::new("cmd").subcommand(Command::new("subcmd"));
@@ -430,11 +414,11 @@ fn subcommand_not_recognized() {
     utils::assert_output(
         cmd,
         "fake help",
-        "error: The subcommand 'help' wasn't recognized
+        "error: unrecognized subcommand 'help'
 
 Usage: fake [COMMAND]
 
-For more information try '--help'
+For more information, try '--help'.
 ",
         true,
     );
@@ -447,7 +431,7 @@ fn busybox_like_multicall() {
     }
     let cmd = Command::new("busybox")
         .multicall(true)
-        .subcommand(Command::new("busybox").subcommands(applet_commands()))
+        .subcommand(Command::new("busybox").defer(|cmd| cmd.subcommands(applet_commands())))
         .subcommands(applet_commands());
 
     let m = cmd
@@ -503,31 +487,31 @@ fn bad_multicall_command_error() {
 
     let err = cmd.clone().try_get_matches_from(["world"]).unwrap_err();
     assert_eq!(err.kind(), ErrorKind::InvalidSubcommand);
-    static HELLO_EXPECTED: &str = "\
-error: The subcommand 'world' wasn't recognized
+    assert_data_eq!(
+        err.to_string(),
+        str![[r#"
+error: unrecognized subcommand 'world'
 
 Usage: <COMMAND>
 
-For more information try 'help'
-";
-    utils::assert_eq(HELLO_EXPECTED, err.to_string());
+For more information, try 'help'.
+
+"#]]
+    );
 
     #[cfg(feature = "suggestions")]
     {
         let err = cmd.clone().try_get_matches_from(["baz"]).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::InvalidSubcommand);
-        static BAZ_EXPECTED: &str = "\
-error: The subcommand 'baz' wasn't recognized
+        utils::assert_error(err, ErrorKind::InvalidSubcommand, str![[r#"
+error: unrecognized subcommand 'baz'
 
-  Did you mean 'bar'?
-
-  If you believe you received this message in error, try re-running with ' -- baz'
+  tip: a similar subcommand exists: 'bar'
 
 Usage: <COMMAND>
 
-For more information try 'help'
-";
-        utils::assert_eq(BAZ_EXPECTED, err.to_string());
+For more information, try 'help'.
+
+"#]], true);
     }
 
     // Verify whatever we did to get the above to work didn't disable `--help` and `--version`.
@@ -567,14 +551,16 @@ Arguments:
   [value]  
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
     let cmd = Command::new("repl")
         .version("1.0.0")
         .propagate_version(true)
         .multicall(true)
-        .subcommand(Command::new("foo").subcommand(Command::new("bar").arg(Arg::new("value"))));
+        .subcommand(Command::new("foo").defer(|cmd| {
+            cmd.subcommand(Command::new("bar").defer(|cmd| cmd.arg(Arg::new("value"))))
+        }));
     utils::assert_output(cmd, "foo bar --help", EXPECTED, false);
 }
 
@@ -587,40 +573,49 @@ Arguments:
   [value]  
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ";
     let cmd = Command::new("repl")
         .version("1.0.0")
         .propagate_version(true)
         .multicall(true)
-        .subcommand(Command::new("foo").subcommand(Command::new("bar").arg(Arg::new("value"))));
+        .subcommand(
+            Command::new("foo")
+                .defer(|cmd| cmd.subcommand(Command::new("bar").arg(Arg::new("value")))),
+        );
     utils::assert_output(cmd, "help foo bar", EXPECTED, false);
 }
 
 #[test]
 fn multicall_render_help() {
-    static EXPECTED: &str = "\
+    let mut cmd = Command::new("repl")
+        .version("1.0.0")
+        .propagate_version(true)
+        .multicall(true)
+        .subcommand(
+            Command::new("foo")
+                .defer(|cmd| cmd.subcommand(Command::new("bar").arg(Arg::new("value")))),
+        );
+    cmd.build();
+    let subcmd = cmd.find_subcommand_mut("foo").unwrap();
+    let subcmd = subcmd.find_subcommand_mut("bar").unwrap();
+
+    let help = subcmd.render_help().to_string();
+    assert_data_eq!(
+        help,
+        str![[r#"
 Usage: foo bar [value]
 
 Arguments:
   [value]  
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
-";
-    let mut cmd = Command::new("repl")
-        .version("1.0.0")
-        .propagate_version(true)
-        .multicall(true)
-        .subcommand(Command::new("foo").subcommand(Command::new("bar").arg(Arg::new("value"))));
-    cmd.build();
-    let subcmd = cmd.find_subcommand_mut("foo").unwrap();
-    let subcmd = subcmd.find_subcommand_mut("bar").unwrap();
+  -h, --help     Print help
+  -V, --version  Print version
 
-    let help = subcmd.render_help().to_string();
-    utils::assert_eq(EXPECTED, help);
+"#]]
+    );
 }
 
 #[test]
@@ -629,7 +624,7 @@ fn duplicate_subcommand() {
     Command::new("test")
         .subcommand(Command::new("repeat"))
         .subcommand(Command::new("repeat"))
-        .build()
+        .build();
 }
 
 #[test]
@@ -638,5 +633,5 @@ fn duplicate_subcommand_alias() {
     Command::new("test")
         .subcommand(Command::new("repeat"))
         .subcommand(Command::new("unique").alias("repeat"))
-        .build()
+        .build();
 }

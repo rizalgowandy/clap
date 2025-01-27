@@ -1,4 +1,8 @@
 use clap::{error::ErrorKind, Arg, ArgAction, Command};
+use snapbox::assert_data_eq;
+use snapbox::str;
+
+use crate::utils;
 
 #[test]
 fn option_long() {
@@ -162,6 +166,7 @@ fn option_exact_exact_mult() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn option_exact_less() {
     let m = Command::new("multiple_values")
         .arg(
@@ -174,10 +179,19 @@ fn option_exact_less() {
         .try_get_matches_from(vec!["", "-o", "val1", "-o", "val2"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::WrongNumberOfValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::WrongNumberOfValues, str![[r#"
+error: 3 values required for '-o <option> <option> <option>' but 1 was provided
+
+Usage: multiple_values [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn option_exact_more() {
     let m = Command::new("multiple_values")
         .arg(
@@ -192,7 +206,15 @@ fn option_exact_more() {
         ]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::WrongNumberOfValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::WrongNumberOfValues, str![[r#"
+error: 3 values required for '-o <option> <option> <option>' but 1 was provided
+
+Usage: multiple_values [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -221,6 +243,7 @@ fn option_min_exact() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn option_min_less() {
     let m = Command::new("multiple_values")
         .arg(
@@ -233,7 +256,15 @@ fn option_min_less() {
         .try_get_matches_from(vec!["", "-o", "val1", "val2"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::TooFewValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::TooFewValues, str![[r#"
+error: 3 values required by '-o <option> <option> <option>...'; only 2 were provided
+
+Usage: multiple_values [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -342,6 +373,7 @@ fn option_max_less() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn option_max_zero() {
     let m = Command::new("multiple_values")
         .arg(
@@ -354,7 +386,13 @@ fn option_max_zero() {
         .try_get_matches_from(vec!["", "-o"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::InvalidValue);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::InvalidValue, str![[r#"
+error: a value is required for '-o <option>...' but none was supplied
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -383,6 +421,7 @@ fn option_max_zero_eq() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn option_max_more() {
     let m = Command::new("multiple_values")
         .arg(
@@ -395,8 +434,16 @@ fn option_max_more() {
         .try_get_matches_from(vec!["", "-o", "val1", "val2", "val3", "val4"]);
 
     assert!(m.is_err());
+    let err = m.unwrap_err();
     // Can end up being TooManyValues or UnknownArgument
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::UnknownArgument);
+    utils::assert_error(err, ErrorKind::UnknownArgument, str![[r#"
+error: unexpected argument 'val4' found
+
+Usage: multiple_values [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -427,14 +474,17 @@ fn optional_value() {
     assert_eq!(m.get_one::<String>("port").unwrap(), "42");
 
     let help = cmd.render_help().to_string();
-    const HELP: &str = "\
+    assert_data_eq!(
+        help,
+        str![[r#"
 Usage: test [OPTIONS]
 
 Options:
   -p [<NUM>]      
-  -h, --help      Print help information
-";
-    snapbox::assert_eq(HELP, help);
+  -h, --help      Print help
+
+"#]]
+    );
 }
 
 #[test]
@@ -481,23 +531,41 @@ fn positional_exact_exact() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn positional_exact_less() {
     let m = Command::new("multiple_values")
         .arg(Arg::new("pos").help("multiple positionals").num_args(3))
         .try_get_matches_from(vec!["myprog", "val1", "val2"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::WrongNumberOfValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::WrongNumberOfValues, str![[r#"
+error: 3 values required for '[pos] [pos] [pos]' but 2 were provided
+
+Usage: myprog [pos] [pos] [pos]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn positional_exact_more() {
     let m = Command::new("multiple_values")
         .arg(Arg::new("pos").help("multiple positionals").num_args(3))
         .try_get_matches_from(vec!["myprog", "val1", "val2", "val3", "val4"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::WrongNumberOfValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::WrongNumberOfValues, str![[r#"
+error: 3 values required for '[pos] [pos] [pos]' but 4 were provided
+
+Usage: myprog [pos] [pos] [pos]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -520,13 +588,22 @@ fn positional_min_exact() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn positional_min_less() {
     let m = Command::new("multiple_values")
         .arg(Arg::new("pos").help("multiple positionals").num_args(3..))
         .try_get_matches_from(vec!["myprog", "val1", "val2"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::TooFewValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::TooFewValues, str![[r#"
+error: 3 values required by '[pos] [pos] [pos]...'; only 2 were provided
+
+Usage: myprog [pos] [pos] [pos]...
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -587,13 +664,22 @@ fn positional_max_less() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn positional_max_more() {
     let m = Command::new("multiple_values")
         .arg(Arg::new("pos").help("multiple positionals").num_args(1..=3))
         .try_get_matches_from(vec!["myprog", "val1", "val2", "val3", "val4"]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::TooManyValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::TooManyValues, str![[r#"
+error: unexpected value 'val4' for '[pos]...' found; no more were expected
+
+Usage: myprog [pos]...
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -1082,10 +1168,8 @@ fn req_delimiter_complex() {
 // This tests a programmer error and will only succeed with debug_assertions
 #[cfg(debug_assertions)]
 #[test]
-#[should_panic = "When using a positional argument with \
-`.num_args(1..)` that is *not the last* positional argument, the last \
-positional argument (i.e. the one with the highest index) *must* have \
-.required(true) or .last(true) set."]
+#[should_panic = "Positional argument `[target]` *must* have `required(true)` or `last(true)` set \
+because a prior positional argument (`<files>...`) has `num_args(1..)`"]
 fn low_index_positional_not_required() {
     let _ = Command::new("lip")
         .arg(
@@ -1297,7 +1381,6 @@ fn low_index_positional_with_extra_flags() {
     assert_eq!(
         m.get_many::<String>("input")
             .unwrap()
-            .into_iter()
             .map(String::from)
             .collect::<Vec<_>>(),
         vec![
@@ -1311,7 +1394,7 @@ fn low_index_positional_with_extra_flags() {
     assert_eq!(m.get_one::<String>("output").unwrap(), "8");
     assert_eq!(m.get_one::<String>("one").unwrap(), "1");
     assert_eq!(m.get_one::<String>("two").unwrap(), "2");
-    assert!(!*m.get_one::<bool>("yes").unwrap());
+    assert!(!m.get_flag("yes"));
 }
 
 #[test]
@@ -1379,6 +1462,32 @@ fn multiple_value_terminator_option_other_arg() {
 }
 
 #[test]
+fn all_multiple_value_terminator() {
+    let m = Command::new("lip")
+        .arg(
+            Arg::new("files")
+                .value_terminator(";")
+                .action(ArgAction::Set)
+                .num_args(0..),
+        )
+        .arg(Arg::new("other").num_args(0..))
+        .try_get_matches_from(vec!["test", "value", ";"]);
+
+    assert!(m.is_ok(), "{:?}", m.unwrap_err().kind());
+    let m = m.unwrap();
+
+    assert!(m.contains_id("files"));
+    assert!(!m.contains_id("other"));
+    assert_eq!(
+        m.get_many::<String>("files")
+            .unwrap()
+            .map(|v| v.as_str())
+            .collect::<Vec<_>>(),
+        ["value".to_owned()],
+    );
+}
+
+#[test]
 fn multiple_vals_with_hyphen() {
     let res = Command::new("do")
         .arg(
@@ -1415,6 +1524,141 @@ fn multiple_vals_with_hyphen() {
 }
 
 #[test]
+fn multiple_positional_multiple_values() {
+    let res = Command::new("do")
+        .arg(
+            Arg::new("cmd1")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator(";"),
+        )
+        .arg(
+            Arg::new("cmd2")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator(";"),
+        )
+        .try_get_matches_from(vec![
+            "do",
+            "find",
+            "-type",
+            "f",
+            "-name",
+            "special",
+            ";",
+            "/home/clap",
+            "foo",
+        ]);
+    assert!(res.is_ok(), "{:?}", res.unwrap_err().kind());
+
+    let m = res.unwrap();
+    let cmd1: Vec<_> = m
+        .get_many::<String>("cmd1")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd1, &["find", "-type", "f", "-name", "special"]);
+    let cmd2: Vec<_> = m
+        .get_many::<String>("cmd2")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd2, &["/home/clap", "foo"]);
+}
+
+#[test]
+fn value_terminator_has_higher_precedence_than_allow_hyphen_values() {
+    let res = Command::new("do")
+        .arg(
+            Arg::new("cmd1")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator("--foo"),
+        )
+        .arg(
+            Arg::new("cmd2")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator(";"),
+        )
+        .try_get_matches_from(vec![
+            "do",
+            "find",
+            "-type",
+            "f",
+            "-name",
+            "special",
+            "--foo",
+            "/home/clap",
+            "foo",
+        ]);
+    assert!(res.is_ok(), "{:?}", res.unwrap_err().kind());
+
+    let m = res.unwrap();
+    let cmd1: Vec<_> = m
+        .get_many::<String>("cmd1")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd1, &["find", "-type", "f", "-name", "special"]);
+    let cmd2: Vec<_> = m
+        .get_many::<String>("cmd2")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd2, &["/home/clap", "foo"]);
+}
+
+#[test]
+fn value_terminator_restores_escaping_disabled_by_allow_hyphen_values() {
+    let res = Command::new("do")
+        .arg(
+            Arg::new("cmd1")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator("--"),
+        )
+        .arg(
+            Arg::new("cmd2")
+                .action(ArgAction::Set)
+                .num_args(1..)
+                .allow_hyphen_values(true)
+                .value_terminator(";"),
+        )
+        .try_get_matches_from(vec![
+            "do",
+            "find",
+            "-type",
+            "f",
+            "-name",
+            "special",
+            "--",
+            "/home/clap",
+            "foo",
+        ]);
+    assert!(res.is_ok(), "{:?}", res.unwrap_err().kind());
+
+    let m = res.unwrap();
+    let cmd1: Vec<_> = m
+        .get_many::<String>("cmd1")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd1, &["find", "-type", "f", "-name", "special"]);
+    let cmd2: Vec<_> = m
+        .get_many::<String>("cmd2")
+        .unwrap()
+        .map(|v| v.as_str())
+        .collect();
+    assert_eq!(&cmd2, &["/home/clap", "foo"]);
+}
+
+#[test]
 fn issue_1480_max_values_consumes_extra_arg_1() {
     let res = Command::new("prog")
         .arg(Arg::new("field").num_args(..=1).long("field"))
@@ -1425,23 +1669,41 @@ fn issue_1480_max_values_consumes_extra_arg_1() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn issue_1480_max_values_consumes_extra_arg_2() {
-    let res = Command::new("prog")
+    let m = Command::new("prog")
         .arg(Arg::new("field").num_args(..=1).long("field"))
         .try_get_matches_from(vec!["prog", "--field", "1", "2"]);
 
-    assert!(res.is_err());
-    assert_eq!(res.unwrap_err().kind(), ErrorKind::UnknownArgument);
+    assert!(m.is_err());
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::UnknownArgument, str![[r#"
+error: unexpected argument '2' found
+
+Usage: prog [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn issue_1480_max_values_consumes_extra_arg_3() {
-    let res = Command::new("prog")
+    let m = Command::new("prog")
         .arg(Arg::new("field").num_args(..=1).long("field"))
         .try_get_matches_from(vec!["prog", "--field", "1", "2", "3"]);
 
-    assert!(res.is_err());
-    assert_eq!(res.unwrap_err().kind(), ErrorKind::UnknownArgument);
+    assert!(m.is_err());
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::UnknownArgument, str![[r#"
+error: unexpected argument '2' found
+
+Usage: prog [OPTIONS]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
@@ -1532,7 +1794,7 @@ fn values_per_occurrence_named() {
     ]);
     let m = match m {
         Ok(m) => m,
-        Err(err) => panic!("{}", err),
+        Err(err) => panic!("{err}"),
     };
     assert_eq!(
         m.get_many::<String>("pos")
@@ -1560,6 +1822,7 @@ fn values_per_occurrence_positional() {
 }
 
 #[test]
+#[cfg(feature = "error-context")]
 fn issue_2229() {
     let m = Command::new("multiple_values")
         .arg(Arg::new("pos").help("multiple positionals").num_args(3))
@@ -1568,11 +1831,19 @@ fn issue_2229() {
         ]);
 
     assert!(m.is_err());
-    assert_eq!(m.unwrap_err().kind(), ErrorKind::WrongNumberOfValues);
+    let err = m.unwrap_err();
+    utils::assert_error(err, ErrorKind::WrongNumberOfValues, str![[r#"
+error: 3 values required for '[pos] [pos] [pos]' but 6 were provided
+
+Usage: myprog [pos] [pos] [pos]
+
+For more information, try '--help'.
+
+"#]], true);
 }
 
 #[test]
-#[should_panic = "Argument 'pos` is positional, it must take a value"]
+#[should_panic = "Argument 'pos` is positional and it must take a value but action is SetTrue"]
 fn disallow_positionals_without_values() {
     let cmd = Command::new("test").arg(Arg::new("pos").num_args(0));
     cmd.debug_assert();

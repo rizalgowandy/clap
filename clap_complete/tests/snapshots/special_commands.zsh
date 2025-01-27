@@ -14,15 +14,15 @@ _my-app() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '*-c[some config file]' \
 '*-C[some config file]' \
 '*--config[some config file]' \
 '*--conf[some config file]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 '::file -- some input file:_files' \
 '::choice:(first second)' \
 ":: :_my-app_commands" \
@@ -35,42 +35,42 @@ _my-app() {
         curcontext="${curcontext%:*:*}:my-app-command-$line[3]:"
         case $line[3] in
             (test)
-_arguments "${_arguments_options[@]}" \
-'--case=[the case to test]: : ' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
+_arguments "${_arguments_options[@]}" : \
+'--case=[the case to test]: :_default' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 && ret=0
 ;;
 (some_cmd)
-_arguments "${_arguments_options[@]}" \
-'--config=[the other case to test]: : ' \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
-'*::path:' \
+_arguments "${_arguments_options[@]}" : \
+'--config=[the other case to test]: :_default' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+'*::path:_default' \
 && ret=0
 ;;
 (some-cmd-with-hyphens)
-_arguments "${_arguments_options[@]}" \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 && ret=0
 ;;
 (some-hidden-cmd)
-_arguments "${_arguments_options[@]}" \
-'-h[Print help information]' \
-'--help[Print help information]' \
-'-V[Print version information]' \
-'--version[Print version information]' \
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_my-app__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -82,23 +82,23 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:my-app-help-command-$line[1]:"
         case $line[1] in
             (test)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (some_cmd)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (some-cmd-with-hyphens)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (some-hidden-cmd)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -142,35 +142,35 @@ _my-app__help__some-cmd-with-hyphens_commands() {
     local commands; commands=()
     _describe -t commands 'my-app help some-cmd-with-hyphens commands' commands "$@"
 }
-(( $+functions[_my-app__some-cmd-with-hyphens_commands] )) ||
-_my-app__some-cmd-with-hyphens_commands() {
-    local commands; commands=()
-    _describe -t commands 'my-app some-cmd-with-hyphens commands' commands "$@"
-}
 (( $+functions[_my-app__help__some-hidden-cmd_commands] )) ||
 _my-app__help__some-hidden-cmd_commands() {
     local commands; commands=()
     _describe -t commands 'my-app help some-hidden-cmd commands' commands "$@"
-}
-(( $+functions[_my-app__some-hidden-cmd_commands] )) ||
-_my-app__some-hidden-cmd_commands() {
-    local commands; commands=()
-    _describe -t commands 'my-app some-hidden-cmd commands' commands "$@"
 }
 (( $+functions[_my-app__help__some_cmd_commands] )) ||
 _my-app__help__some_cmd_commands() {
     local commands; commands=()
     _describe -t commands 'my-app help some_cmd commands' commands "$@"
 }
-(( $+functions[_my-app__some_cmd_commands] )) ||
-_my-app__some_cmd_commands() {
-    local commands; commands=()
-    _describe -t commands 'my-app some_cmd commands' commands "$@"
-}
 (( $+functions[_my-app__help__test_commands] )) ||
 _my-app__help__test_commands() {
     local commands; commands=()
     _describe -t commands 'my-app help test commands' commands "$@"
+}
+(( $+functions[_my-app__some-cmd-with-hyphens_commands] )) ||
+_my-app__some-cmd-with-hyphens_commands() {
+    local commands; commands=()
+    _describe -t commands 'my-app some-cmd-with-hyphens commands' commands "$@"
+}
+(( $+functions[_my-app__some-hidden-cmd_commands] )) ||
+_my-app__some-hidden-cmd_commands() {
+    local commands; commands=()
+    _describe -t commands 'my-app some-hidden-cmd commands' commands "$@"
+}
+(( $+functions[_my-app__some_cmd_commands] )) ||
+_my-app__some_cmd_commands() {
+    local commands; commands=()
+    _describe -t commands 'my-app some_cmd commands' commands "$@"
 }
 (( $+functions[_my-app__test_commands] )) ||
 _my-app__test_commands() {
@@ -178,4 +178,8 @@ _my-app__test_commands() {
     _describe -t commands 'my-app test commands' commands "$@"
 }
 
-_my-app "$@"
+if [ "$funcstack[1]" = "_my-app" ]; then
+    _my-app "$@"
+else
+    compdef _my-app my-app
+fi

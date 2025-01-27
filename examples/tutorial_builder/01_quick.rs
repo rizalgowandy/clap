@@ -25,7 +25,7 @@ fn main() {
 
     // You can check the value provided by positional arguments, or option arguments
     if let Some(name) = matches.get_one::<String>("name") {
-        println!("Value for name: {}", name);
+        println!("Value for name: {name}");
     }
 
     if let Some(config_path) = matches.get_one::<PathBuf>("config") {
@@ -36,7 +36,7 @@ fn main() {
     // Note, only flags can have multiple occurrences
     match matches
         .get_one::<u8>("debug")
-        .expect("Count's are defaulted")
+        .expect("Counts are defaulted")
     {
         0 => println!("Debug mode is off"),
         1 => println!("Debug mode is kind of on"),
@@ -48,7 +48,7 @@ fn main() {
     // matches just as you would the top level cmd
     if let Some(matches) = matches.subcommand_matches("test") {
         // "$ myapp test" was run
-        if *matches.get_one::<bool>("list").expect("defaulted by clap") {
+        if matches.get_flag("list") {
             // "$ myapp test -l" was run
             println!("Printing testing lists...");
         } else {

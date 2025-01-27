@@ -10,16 +10,19 @@ ifneq (${TOOLCHAIN_TARGET},)
   ARGS+=--target ${TOOLCHAIN_TARGET}
 endif
 
-MSRV?=1.60.0
+STABLE?=1.84
 
 _FEATURES = minimal default wasm full debug release
 _FEATURES_minimal = --no-default-features --features "std"
 _FEATURES_default =
-_FEATURES_wasm = --features "deprecated derive cargo env unicode string unstable-replace unstable-grouped"
-_FEATURES_full = --features "deprecated derive cargo env unicode string unstable-replace unstable-grouped wrap_help"
+_FEATURES_wasm = --no-default-features --features "std help usage error-context suggestions" --features "deprecated derive cargo env unicode string"
+_FEATURES_full = --features "deprecated derive cargo env unicode string wrap_help unstable-ext"
 _FEATURES_next = ${_FEATURES_full} --features unstable-v5
 _FEATURES_debug = ${_FEATURES_full} --features debug --features clap_complete/debug
 _FEATURES_release = ${_FEATURES_full} --release
+
+check-wasm:
+	cargo check ${_FEATURES_${@:check-%=%}} ${ARGS}
 
 check-%:
 	cargo check ${_FEATURES_${@:check-%=%}} --all-targets ${ARGS}
@@ -34,7 +37,7 @@ clippy-%:
 	cargo clippy ${_FEATURES_${@:clippy-%=%}} ${ARGS} --all-targets -- -D warnings -A deprecated
 
 test-ui-%:
-	cargo +${MSRV} test --test derive_ui --features derive ${_FEATURES_${@:test-ui-%=%}}
+	cargo +${STABLE} test --test derive_ui --features derive,unstable-derive-ui-tests ${_FEATURES_${@:test-ui-%=%}}
 
 doc:
 	cargo doc --workspace --all-features --no-deps --document-private-items

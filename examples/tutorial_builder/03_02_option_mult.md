@@ -6,25 +6,19 @@ Usage: 03_02_option_mult[EXE] [OPTIONS]
 
 Options:
   -n, --name <name>  
-  -h, --help         Print help information
-  -V, --version      Print version information
+  -h, --help         Print help
+  -V, --version      Print version
 
 $ 03_02_option_mult
-name: None
+names: []
 
 $ 03_02_option_mult --name bob
-name: Some("bob")
+names: ["bob"]
 
-$ 03_02_option_mult --name=bob
-name: Some("bob")
+$ 03_02_option_mult --name bob --name john
+names: ["bob", "john"]
 
-$ 03_02_option_mult -n bob
-name: Some("bob")
-
-$ 03_02_option_mult -n=bob
-name: Some("bob")
-
-$ 03_02_option_mult -nbob
-name: Some("bob")
+$ 03_02_option_mult_derive --name bob --name=john -n tom -n=chris -nsteve
+name: ["bob", "john", "tom", "chris", "steve"]
 
 ```

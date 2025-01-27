@@ -14,11 +14,11 @@ _my-app() {
     fi
 
     local context curcontext="$curcontext" state line
-    _arguments "${_arguments_options[@]}" \
+    _arguments "${_arguments_options[@]}" : \
 '-c[]' \
 '(-c)-v[]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 ":: :_my-app_commands" \
 "*::: :->my-app" \
 && ret=0
@@ -29,15 +29,15 @@ _my-app() {
         curcontext="${curcontext%:*:*}:my-app-command-$line[1]:"
         case $line[1] in
             (test)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 '*-d[]' \
 '-c[]' \
-'-h[Print help information]' \
-'--help[Print help information]' \
+'-h[Print help]' \
+'--help[Print help]' \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 ":: :_my-app__help_commands" \
 "*::: :->help" \
 && ret=0
@@ -49,11 +49,11 @@ _arguments "${_arguments_options[@]}" \
         curcontext="${curcontext%:*:*}:my-app-help-command-$line[1]:"
         case $line[1] in
             (test)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
 (help)
-_arguments "${_arguments_options[@]}" \
+_arguments "${_arguments_options[@]}" : \
 && ret=0
 ;;
         esac
@@ -68,7 +68,7 @@ esac
 (( $+functions[_my-app_commands] )) ||
 _my-app_commands() {
     local commands; commands=(
-'test:Subcommand' \
+'test:Subcommand with a second line' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'my-app commands' commands "$@"
@@ -76,7 +76,7 @@ _my-app_commands() {
 (( $+functions[_my-app__help_commands] )) ||
 _my-app__help_commands() {
     local commands; commands=(
-'test:Subcommand' \
+'test:Subcommand with a second line' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'my-app help commands' commands "$@"
@@ -97,4 +97,8 @@ _my-app__test_commands() {
     _describe -t commands 'my-app test commands' commands "$@"
 }
 
-_my-app "$@"
+if [ "$funcstack[1]" = "_my-app" ]; then
+    _my-app "$@"
+else
+    compdef _my-app my-app
+fi

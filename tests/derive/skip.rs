@@ -30,7 +30,7 @@ fn skip_1() {
     );
     opt.s = 42;
 
-    opt.update_from(["test", "-x", "22"]);
+    opt.try_update_from(["test", "-x", "22"]).unwrap();
 
     assert_eq!(opt, Opt { x: 22, s: 42 });
 }
@@ -70,19 +70,15 @@ fn skip_2() {
 fn skip_enum() {
     #[derive(Debug, PartialEq)]
     #[allow(unused)]
+    #[derive(Default)]
     enum Kind {
         A,
+        #[default]
         B,
     }
 
-    impl Default for Kind {
-        fn default() -> Self {
-            Kind::B
-        }
-    }
-
     #[derive(Parser, Debug, PartialEq)]
-    pub struct Opt {
+    pub(crate) struct Opt {
         #[arg(long, short)]
         number: u32,
         #[arg(skip)]
@@ -104,7 +100,7 @@ fn skip_enum() {
 #[test]
 fn skip_help_doc_comments() {
     #[derive(Parser, Debug, PartialEq, Eq)]
-    pub struct Opt {
+    pub(crate) struct Opt {
         #[arg(skip, help = "internal_stuff")]
         a: u32,
 
@@ -135,7 +131,7 @@ fn skip_help_doc_comments() {
 #[test]
 fn skip_val() {
     #[derive(Parser, Debug, PartialEq, Eq)]
-    pub struct Opt {
+    pub(crate) struct Opt {
         #[arg(long, short)]
         number: u32,
 

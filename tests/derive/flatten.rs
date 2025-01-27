@@ -257,41 +257,20 @@ fn docstrings_ordering_with_multiple_clap_partial() {
 }
 
 #[test]
-fn optional_flatten() {
-    #[derive(Parser, Debug, PartialEq, Eq)]
-    struct Opt {
-        #[command(flatten)]
-        source: Option<Source>,
+#[should_panic = "cannot `#[flatten]` an `Option<Args>` with `#[group(skip)]`"]
+fn flatten_skipped_group() {
+    #[derive(clap::Parser, Debug)]
+    struct Cli {
+        #[clap(flatten)]
+        args: Option<Args>,
     }
 
-    #[derive(clap::Args, Debug, PartialEq, Eq)]
-    struct Source {
-        crates: Vec<String>,
-        #[arg(long)]
-        path: Option<std::path::PathBuf>,
-        #[arg(long)]
-        git: Option<String>,
+    #[derive(clap::Args, Debug)]
+    #[group(skip)]
+    struct Args {
+        #[clap(short)]
+        param: bool,
     }
 
-    assert_eq!(Opt { source: None }, Opt::try_parse_from(["test"]).unwrap());
-    assert_eq!(
-        Opt {
-            source: Some(Source {
-                crates: vec!["serde".to_owned()],
-                path: None,
-                git: None,
-            }),
-        },
-        Opt::try_parse_from(["test", "serde"]).unwrap()
-    );
-    assert_eq!(
-        Opt {
-            source: Some(Source {
-                crates: Vec::new(),
-                path: Some("./".into()),
-                git: None,
-            }),
-        },
-        Opt::try_parse_from(["test", "--path=./"]).unwrap()
-    );
+    Cli::try_parse_from(["test"]).unwrap();
 }
